@@ -1,0 +1,24 @@
+<h4>Qué es esto</h4>
+<p>Una forma de ver <b>quiénes son los proveedores del Estado uruguayo</b> y <b>con qué entes públicos se vinculan</b>, a partir de las adjudicaciones publicadas por la Agencia Reguladora de Compras Estatales (ARCE) en formato OCDS desde 2002.</p>
+<h4>Cómo se calculan los montos</h4>
+<ul>
+<li>El OCDS de ARCE <b>no publica un monto total por adjudicación</b>. Cada monto de esta app es la suma de <i>cantidad × precio unitario</i> de los ítems adjudicados (o el monto declarado, cuando el release lo trae).</li>
+<li>Los ítems sin precio no suman. Algunas adjudicaciones quedan sin monto.</li>
+<li><b>Las monedas no se suman ni se convierten.</b> El dato no trae tipo de cambio y una parte grande del gasto está en dólares; por eso cada vista es de una sola moneda.</li>
+<li>Sólo cuentan adjudicaciones <i>activas</i>. Los desiertos y las cancelaciones quedan afuera.</li>
+<li><b>Adjudicado no es pagado.</b> Es lo que se resolvió comprar, no lo que se ejecutó.</li>
+<li><b>Montos atípicos:</b> hay adjudicaciones con montos imposibles (p. ej. un alambrado por $392 mil millones). Se marcan con un umbral por moneda y se excluyen por defecto; se pueden incluir desde el panel lateral y se listan en «Calidad de datos». Los umbrales también dejan afuera megacontratos reales (obras de OSE, PPP viales).</li>
+<li><b>Tipo de procedimiento:</b> ~60&nbsp;% de las adjudicaciones no tiene el llamado asociado en la fuente y figura como «Sin dato».</li>
+<li><b>Años anteriores a ~2016:</b> los montos son mucho menores y el porcentaje sin proveedor es mayor. No se comprobó si es cobertura de la fuente o gasto real; no es una serie comparable en el tiempo.</li>
+<li><b>Compras entre entes del Estado:</b> algunos «proveedores» son empresas públicas (p. ej. ANCAP o DUCSA vendiendo a UTE u hospitales); la app no los distingue.</li>
+</ul>
+<h4>Identidad de proveedores y entes</h4>
+<ul>
+<li>Un proveedor es su identificador del RUPE (<code>R/&lt;RUT&gt;</code>); los extranjeros usan <code>X/…</code>. Los nombres cambian entre años: se muestra el más reciente.</li>
+<li>Un ente es una unidad ejecutora (<code>inciso-UE</code>). El nombre del inciso viene de la codiguera de ARCE.</li>
+<li>Dos empresas de un mismo grupo económico figuran como proveedores distintos: la app no las agrupa.</li>
+</ul>
+<h4>Cómo leer la concentración</h4>
+<p>Que un proveedor concentre mucho de un ente describe la <i>estructura</i> de las adjudicaciones (un laboratorio de un único producto, un servicio con un solo oferente habilitado). No es, por sí solo, un indicio de irregularidad.</p>
+<h4>Fuente y código</h4>
+<p>ARCE, <i>Datos Históricos de Compras</i>, catalogodatos.gub.uy (dataset <code>arce-datos-historicos-de-compras</code>). El pipeline completo está en <code>scripts/</code>.</p>
