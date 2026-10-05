@@ -42,8 +42,8 @@ Rscript scripts/04_pares.R             # marca atípicos + tabla de vínculos (p
 shiny::runApp()                        # o Rscript scripts/deploy.R
 ```
 
-Los datos derivados no se versionan salvo `data/app/pares.parquet` (la tabla que usa la app
-en memoria); `adjudicaciones.parquet` (60 MB) se regenera con el pipeline.
+Los dos parquet de `data/app/` se versionan (38 MB + 7 MB) para que la app se pueda publicar desde GitHub;
+se regeneran con el pipeline.
 
 La app mantiene en memoria sólo `pares.parquet` (6,8 MB, 650 mil filas) y lee el
 detalle de `adjudicaciones.parquet` (60 MB) a demanda con arrow.
@@ -67,6 +67,13 @@ detalle de `adjudicaciones.parquet` (60 MB) a demanda con arrow.
 
 `R/informe.R` los arma con ggplot2 + gridExtra sobre `cairo_pdf`: sin LaTeX ni Chrome,
 así corren igual en esta PC y en shinyapps.io.
+
+## Publicar
+
+- **Posit Connect Cloud** (plan gratis: 5 apps, 4 GB): conectar este repo en connect.posit.cloud →
+  *Publish* → Shiny → rama `main`, archivo `app.R`. El `manifest.json` ya está en el repo
+  (se regenera con `rsconnect::writeManifest()` si cambian los paquetes).
+- **shinyapps.io**: `Rscript scripts/deploy.R`.
 
 ## Estado
 

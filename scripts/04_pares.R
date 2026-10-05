@@ -16,7 +16,7 @@ UMBRAL <- c(UYU = 5e9, USD = 2e8, EUR = 1.5e8, UYI = 1e9)
 UMBRAL_OTRAS <- 2e8
 
 adj <- read_parquet("data/app/adjudicaciones.parquet") |>
-  select(-any_of("atipico")) |>
+  select(-any_of(c("atipico", "descripcion"))) |>   # descripcion: 20 MB que la app no usa
   mutate(atipico = !is.na(monto) & !is.na(moneda) &
            monto >= coalesce(unname(UMBRAL[moneda]), UMBRAL_OTRAS))
 write_parquet(adj, "data/app/adjudicaciones.parquet", compression = "zstd")
