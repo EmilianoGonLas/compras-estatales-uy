@@ -72,6 +72,13 @@ ui <- page_navbar(
           "El tamaño es el monto total del período; el grosor de la línea, el monto del vínculo.")))),
       card(visNetworkOutput("red", height = 680)))),
 
+  nav_panel("Red 3D",
+    tags$iframe(src = "red3d.html", title = "Red 3D de compras estatales", allowfullscreen = NA,
+                style = "width:100%;height:calc(100vh - 70px);min-height:560px;border:0;border-radius:10px;background:#04060d"),
+    p(class = "nota", "Red de redes en 3D: incisos → entes → proveedores. Usa sus propios controles ",
+      "(no responde a los filtros del panel lateral). ",
+      tags$a(href = "red3d.html", target = "_blank", "Abrir a pantalla completa"))),
+
   nav_panel("Calidad de datos",
     card(card_body(
       p("La fuente trae montos que no pueden ser reales, mezclados con megacontratos que sí lo son. ",

@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Red 3D · Compras estatales de Uruguay</title>
+<style>
+  :root{--bg:#04060d;--panel:rgba(12,18,34,.72);--borde:rgba(148,163,184,.22);--txt:#e5e9f2;--sub:#8b96ad;--acento:#7dd3fc}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font:14px/1.4 "Segoe UI",system-ui,sans-serif;overflow:hidden}
+  #grafo{position:fixed;inset:0}
+  .panel{position:fixed;background:var(--panel);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--borde);border-radius:14px;padding:14px 16px;z-index:5;box-shadow:0 8px 32px rgba(0,0,0,.35)}
+  #ctrl{top:14px;left:14px;width:300px;max-height:calc(100% - 28px);overflow:auto}
+  #info{top:14px;right:14px;width:330px;max-height:calc(100% - 28px);overflow:auto;transition:opacity .3s,transform .3s}
+  #info.oculto{opacity:0;transform:translateX(20px);pointer-events:none}
+  h1{font-size:16px;margin:0 0 2px;letter-spacing:.2px}
+  .sub{color:var(--sub);font-size:12px}
+  label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--sub);margin:12px 0 4px}
+  select,input[type=text]{width:100%;background:rgba(2,6,23,.6);color:var(--txt);border:1px solid var(--borde);border-radius:8px;padding:7px 9px;font:inherit}
+  input[type=range]{width:100%;accent-color:var(--acento)}
+  .fila{display:flex;gap:8px;align-items:center}
+  .fila>*{flex:1}
+  button{background:rgba(125,211,252,.12);color:var(--acento);border:1px solid rgba(125,211,252,.35);border-radius:8px;padding:6px 10px;font:inherit;cursor:pointer;transition:.15s}
+  button:hover{background:rgba(125,211,252,.25)}
+  button.sec{background:transparent;color:var(--sub);border-color:var(--borde)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .chip{padding:4px 9px;font-size:12px;border-radius:99px}
+  .chip.on{background:var(--acento);color:#04101c;border-color:var(--acento)}
+  .chk{display:flex;align-items:center;gap:7px;margin-top:7px;color:var(--txt);text-transform:none;letter-spacing:0;font-size:13px}
+  #crumbs{margin:10px 0 0;font-size:12px;color:var(--sub)}
+  #crumbs a{color:var(--acento);cursor:pointer;text-decoration:none}
+  #crumbs a:hover{text-decoration:underline}
+  #res{position:absolute;left:0;right:0;background:#0b1224;border:1px solid var(--borde);border-radius:8px;margin-top:3px;max-height:260px;overflow:auto;z-index:9;display:none}
+  #res div{padding:6px 9px;cursor:pointer;font-size:13px;border-bottom:1px solid rgba(148,163,184,.1)}
+  #res div:hover,#res div.sel{background:rgba(125,211,252,.15)}
+  #res small{color:var(--sub);margin-left:6px}
+  .kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+  .kpi{background:rgba(255,255,255,.05);border-radius:9px;padding:7px 10px}
+  .kpi b{display:block;font-size:15px}.kpi span{font-size:11px;color:var(--sub)}
+  .tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:99px;margin-bottom:6px;color:#04101c;font-weight:600}
+  #info h2{font-size:16px;margin:2px 0 4px;line-height:1.25}
+  #info h3{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--sub);margin:14px 0 4px}
+  .item{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid rgba(148,163,184,.12);cursor:pointer;font-size:13px}
+  .item:hover{color:var(--acento)}
+  .item span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .item span:last-child{color:var(--sub);white-space:nowrap;font-size:12px}
+  .barra{height:3px;border-radius:2px;margin-top:2px;opacity:.8}
+  #tip{position:fixed;pointer-events:none;z-index:8;background:rgba(2,6,23,.92);border:1px solid var(--borde);border-radius:8px;padding:6px 10px;font-size:12px;display:none;max-width:280px}
+  #ayuda{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:4;color:var(--sub);font-size:12px;background:var(--panel);border:1px solid var(--borde);border-radius:99px;padding:6px 16px;white-space:nowrap}
+  #carga{position:fixed;inset:0;z-index:20;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;transition:opacity .8s}
+  #carga.fuera{opacity:0;pointer-events:none}
+  .spin{width:42px;height:42px;border-radius:50%;border:3px solid rgba(125,211,252,.2);border-top-color:var(--acento);animation:g 1s linear infinite}
+  @keyframes g{to{transform:rotate(360deg)}}
+  @media(max-width:820px){#ctrl{width:calc(100% - 28px);max-height:42%}#info{top:auto;bottom:14px;width:calc(100% - 28px);max-height:38%}#ayuda{display:none}}
+</style>
+</head>
+<body>
+<div id="carga"><div class="spin"></div><div class="sub">Armando la red…</div></div>
+<div id="grafo"></div>
+<div id="tip"></div>
+
+<div id="ctrl" class="panel">
+  <h1>Red de redes · Compras estatales</h1>
+  <div class="sub">Proveedores y entes públicos de Uruguay (ARCE, OCDS). Adjudicado ≠ pagado.</div>
+
+  <label>Buscar proveedor o ente</label>
+  <div style="position:relative"><input id="q" type="text" placeholder="Nombre…" autocomplete="off"><div id="res"></div></div>
+
+  <div class="chips" id="modos">
+    <button class="chip" data-m="incisos">Red de redes</button>
+    <button class="chip" data-m="completa">Red completa</button>
+  </div>
+  <div id="crumbs"></div>
+
+  <label>Moneda</label>
+  <select id="mon"><option>UYU</option><option>USD</option></select>
+
+  <label>Años: <span id="yl"></span></label>
+  <div class="fila"><input id="y0" type="range"><input id="y1" type="range"></div>
+
+  <label><span id="dl">Densidad</span>: <span id="dv"></span></label>
+  <input id="dens" type="range" min="1" max="100" value="40">
+
+  <label>Visualización</label>
+  <div class="chk"><input id="oLab" type="checkbox" checked><span>Etiquetas</span></div>
+  <div class="chk"><input id="oPar" type="checkbox" checked><span>Partículas en los vínculos</span></div>
+  <div class="chk"><input id="oRot" type="checkbox" checked><span>Rotación automática</span></div>
+  <div class="fila" style="margin-top:10px"><button id="bCam" class="sec">Recentrar cámara</button><button id="bBack" class="sec">← Volver</button></div>
+</div>
+
+<div id="info" class="panel oculto"></div>
+<div id="ayuda">clic: detalle · doble clic: entrar / vecindario · arrastrar: fijar nodo · rueda: zoom · Esc: volver</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three-spritetext@1.8.2/dist/three-spritetext.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/3d-force-graph@1.73.4/dist/3d-force-graph.min.js"></script>
+<script src="red3d-data.js"></script>
+<script>
+(() => {
+'use strict';
+const D = window.RED3D;
+const $ = id => document.getElementById(id);
+const NI = D.inc.length, NE = D.ent.length, NP = D.prov.length;
+
+// ---------- utilidades ----------
+const norm = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const provN = D.prov.map(norm), entN = D.ent.map(e => norm(e[0]));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmtN = x => Math.round(x).toLocaleString('es-UY');
+function fmt(m, sin) {
+  const x = Math.abs(m); let s;
+  if (x >= 1e9) s = (m / 1e9).toFixed(1).replace('.', ',') + ' mil millones';
+  else if (x >= 1e6) s = (m / 1e6).toFixed(1).replace('.', ',') + ' millones';
+  else s = fmtN(m);
+  return sin ? s : S.mon + ' ' + s;
+}
+const hue = i => (i * 137.508) % 360;
+const incCss = (i, l = 62) => `hsl(${hue(i)},72%,${l}%)`;
+const incCol = (i, l = .62) => new THREE.Color().setHSL(hue(i) / 360, .72, l);
+const GRIS = '#94a3b8';
+
+// ---------- estado ----------
+const S = {
+  mon: 'UYU', y0: D.anios[1] - 4, y1: D.anios[1], dens: 40,
+  mode: 'incisos',            // incisos | inciso | completa | ego
+  focus: null,                // {t:'inc'|'ent'|'prov', i}
+  hist: [], sel: null, hover: null,
+  lab: true, par: true, rot: true,
+  pairs: [], provPairs: [], entPairs: [], provTot: null, entTot: null, incTot: null, provInc: null,
+  hl: { nodes: new Set(), links: new Set() }, lastClick: { id: null, t: 0 }
+};
+
+// ---------- agregación (años + moneda) ----------
+function agregar() {
+  const R = D.filas[S.mon], m = new Map();
+  for (const r of R) {
+    if (r[2] < S.y0 || r[2] > S.y1) continue;
+    const k = r[0] * 1024 + r[1], o = m.get(k);
+    if (o) { o.m += r[3]; o.n += r[4]; } else m.set(k, { p: r[0], e: r[1], m: r[3], n: r[4] });
+  }
+  S.pairs = [...m.values()];
+  S.provTot = new Float64Array(NP); S.entTot = new Float64Array(NE); S.incTot = new Float64Array(NI);
+  S.provN = new Float64Array(NP); S.entN = new Float64Array(NE);
+  S.provPairs = Array.from({ length: NP }, () => []); S.entPairs = Array.from({ length: NE }, () => []);
+  S.provInc = Array.from({ length: NP }, () => null);
+  for (const q of S.pairs) {
+    S.provTot[q.p] += q.m; S.entTot[q.e] += q.m; S.provN[q.p] += q.n; S.entN[q.e] += q.n;
+    const inc = D.ent[q.e][1]; S.incTot[inc] += q.m;
+    S.provPairs[q.p].push(q); S.entPairs[q.e].push(q);
+    (S.provInc[q.p] ||= new Map()).set(inc, (S.provInc[q.p].get(inc) || 0) + q.m);
+  }
+  for (const a of S.provPairs) a.sort((x, y) => y.m - x.m);
+  for (const a of S.entPairs) a.sort((x, y) => y.m - x.m);
+}
+const mainInc = p => { let b = -1, bm = -1; for (const [i, m] of S.provInc[p]) if (m > bm) { bm = m; b = i; } return b; };
+
+// ---------- construcción de grafos ----------
+const nid = (t, i) => t + ':' + i;
+function nodo(t, i, val) {
+  let name, col, inc;
+  if (t === 'inc') { name = D.inc[i]; inc = i; }
+  else if (t === 'ent') { name = D.ent[i][0]; inc = D.ent[i][1]; }
+  else { name = D.prov[i]; inc = S.provInc[i] ? mainInc(i) : -1; }
+  col = inc >= 0 ? incCss(inc) : GRIS;
+  return { id: nid(t, i), t, i, name, val, inc, col };
+}
+
+function buildIncisos() {
+  const nodes = [], idx = new Map();
+  for (let i = 0; i < NI; i++) if (S.incTot[i] > 0) { const n = nodo('inc', i, S.incTot[i]); idx.set(i, n); nodes.push(n); }
+  const lk = new Map();
+  for (const mp of S.provInc) if (mp && mp.size > 1) {
+    const a = [...mp.entries()];
+    for (let x = 0; x < a.length; x++) for (let y = x + 1; y < a.length; y++) {
+      const [i, mi] = a[x], [j, mj] = a[y], lo = Math.min(i, j), hi = Math.max(i, j), k = lo * 128 + hi;
+      const o = lk.get(k) || { s: lo, t: hi, w: 0, c: 0 }; o.w += Math.min(mi, mj); o.c++; lk.set(k, o);
+    }
+  }
+  const max = Math.round(40 + S.dens * 4);
+  const links = [...lk.values()].sort((a, b) => b.w - a.w).slice(0, max)
+    .map(o => ({ source: nid('inc', o.s), target: nid('inc', o.t), w: o.w, c: o.c, kind: 'inc' }));
+  const used = new Set(); links.forEach(l => { used.add(l.source); used.add(l.target); });
+  return { nodes: nodes.filter(n => used.has(n.id) || S.dens > 90), links };
+}
+
+function buildInciso(F) {
+  const nodes = [], links = [], ids = new Set();
+  const add = n => { if (!ids.has(n.id)) { ids.add(n.id); nodes.push(n); } return n; };
+  const entes = []; for (let e = 0; e < NE; e++) if (D.ent[e][1] === F && S.entTot[e] > 0) entes.push(e);
+  entes.forEach(e => add(nodo('ent', e, S.entTot[e])));
+  const eset = new Set(entes), pt = new Map();
+  for (const e of entes) for (const q of S.entPairs[e]) pt.set(q.p, (pt.get(q.p) || 0) + q.m);
+  const K = Math.round(15 + S.dens * 2.2);
+  const top = [...pt.entries()].sort((a, b) => b[1] - a[1]).slice(0, K);
+  const pset = new Set(top.map(x => x[0]));
+  top.forEach(([p, m]) => add(nodo('prov', p, m)));
+  for (const q of S.pairs) if (pset.has(q.p) && eset.has(q.e))
+    links.push({ source: nid('prov', q.p), target: nid('ent', q.e), w: q.m, c: q.n, kind: 'pe' });
+  // puentes: otros incisos donde también venden los proveedores mostrados
+  for (const [p] of top) {
+    const otros = [...S.provInc[p].entries()].filter(([i]) => i !== F).sort((a, b) => b[1] - a[1]).slice(0, 2);
+    for (const [i, m] of otros) { add(nodo('inc', i, S.incTot[i])).puente = true;
+      links.push({ source: nid('prov', p), target: nid('inc', i), w: m, c: 0, kind: 'puente' }); }
+  }
+  return { nodes, links };
+}
+
+function buildCompleta() {
+  const N = Math.round(60 + S.dens * 14);
+  const top = [...S.pairs].sort((a, b) => b.m - a.m).slice(0, N);
+  const nodes = [], links = [], ids = new Set();
+  const add = (t, i, v) => { const k = nid(t, i); if (!ids.has(k)) { ids.add(k); nodes.push(nodo(t, i, v)); } };
+  for (const q of top) { add('ent', q.e, S.entTot[q.e]); add('prov', q.p, S.provTot[q.p]);
+    links.push({ source: nid('prov', q.p), target: nid('ent', q.e), w: q.m, c: q.n, kind: 'pe' }); }
+  return { nodes, links };
+}
+
+function buildEgo(f) {
+  const nodes = [], links = [], ids = new Set(), lk = new Set();
+  const add = (t, i, v) => { const k = nid(t, i); if (!ids.has(k)) { ids.add(k); nodes.push(nodo(t, i, v)); } };
+  const link = q => { const k = q.p * 1024 + q.e; if (lk.has(k)) return; lk.add(k);
+    links.push({ source: nid('prov', q.p), target: nid('ent', q.e), w: q.m, c: q.n, kind: 'pe' }); };
+  const k1 = Math.round(8 + S.dens * .5), k2 = Math.round(3 + S.dens / 12);
+  if (f.t === 'prov') {
+    add('prov', f.i, S.provTot[f.i]);
+    for (const q of S.provPairs[f.i].slice(0, k1)) { add('ent', q.e, S.entTot[q.e]); link(q);
+      for (const r of S.entPairs[q.e].filter(r => r.p !== f.i).slice(0, k2)) { add('prov', r.p, S.provTot[r.p]); link(r); } }
+  } else {
+    add('ent', f.i, S.entTot[f.i]);
+    for (const q of S.entPairs[f.i].slice(0, k1 * 2)) { add('prov', q.p, S.provTot[q.p]); link(q); }
+    for (const q of S.entPairs[f.i].slice(0, Math.max(4, k1 >> 1)))
+      for (const r of S.provPairs[q.p].filter(r => r.e !== f.i).slice(0, k2)) { add('ent', r.e, S.entTot[r.e]); link(r); }
+  }
+  return { nodes, links };
+}
+
+// ---------- objetos 3D ----------
+const geoS = new THREE.SphereGeometry(1, 20, 16), geoB = new THREE.BoxGeometry(1.5, 1.5, 1.5), geoO = new THREE.IcosahedronGeometry(1, 1);
+const halo = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
+  const r = g.createRadialGradient(64, 64, 4, 64, 64, 64); r.addColorStop(0, 'rgba(255,255,255,.9)'); r.addColorStop(.35, 'rgba(255,255,255,.28)'); r.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = r; g.fillRect(0, 0, 128, 128); return new THREE.CanvasTexture(c); })();
+let maxV = {};
+function radio(n) {
+  const k = Math.sqrt(n.val / (maxV[n.t] || 1));
+  return n.t === 'inc' ? 3 + 10 * k : n.t === 'ent' ? 2.4 + 7 * k : 1.3 + 6 * k;
+}
+function mkNodo(n) {
+  const r = radio(n), col = new THREE.Color(n.col), g = new THREE.Group();
+  const mat = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: n.puente ? .55 : .95 });
+  const mesh = new THREE.Mesh(n.t === 'inc' ? geoO : n.t === 'ent' ? geoB : geoS, mat); mesh.scale.setScalar(r);
+  const hm = new THREE.SpriteMaterial({ map: halo, color: col, transparent: true, opacity: n.t === 'prov' ? .35 : .55, depthWrite: false, blending: THREE.AdditiveBlending });
+  const h = new THREE.Sprite(hm); h.scale.setScalar(r * (n.t === 'prov' ? 4 : 4.6));
+  g.add(h); g.add(mesh); n.__mat = mat; n.__hm = hm; n.__r = r;
+  n.__lbl = null; return g;
+}
+function etiqueta(n) {
+  if (n.__lbl) return;
+  const s = new SpriteText(n.name.length > 34 ? n.name.slice(0, 33) + '…' : n.name, n.t === 'inc' ? 5.2 : 3.6, '#e5e9f2');
+  s.fontFace = 'Segoe UI, system-ui, sans-serif'; s.fontWeight = n.t === 'inc' ? '600' : '400'; s.material.depthWrite = false; s.material.depthTest = false; s.renderOrder = 10;
+  s.position.y = -(n.__r + 4.5); n.__lbl = s; n.__obj.add(s);
+}
+function quitaEtiqueta(n) { if (n.__lbl) { n.__obj.remove(n.__lbl); n.__lbl = null; } }
+function refrescaEtiquetas() {
+  const nodes = G.graphData().nodes;
+  const top = new Set([...nodes].sort((a, b) => b.val - a.val).slice(0, { incisos: 16, inciso: 26, completa: 20, ego: 30 }[S.mode]).map(n => n.id));
+  for (const n of nodes) {
+    const on = n.id === S.sel || n.id === S.hover || (S.lab && top.has(n.id) && (!S.hl.nodes.size || S.hl.nodes.has(n.id)));
+    on ? etiqueta(n) : quitaEtiqueta(n);
+  }
+}
+function aplicaHighlight() {
+  const act = S.hl.nodes.size > 0;
+  for (const n of G.graphData().nodes) {
+    if (!n.__mat) continue;
+    const on = !act || S.hl.nodes.has(n.id);
+    n.__mat.opacity = on ? (n.puente ? .6 : .96) : .08;
+    n.__hm.opacity = on ? (n.t === 'prov' ? .35 : .55) : .02;
+    if (n.__lbl) n.__lbl.material.opacity = on ? 1 : .1;
+  }
+  G.linkColor(G.linkColor()); G.linkWidth(G.linkWidth()); G.linkDirectionalParticles(G.linkDirectionalParticles());
+  refrescaEtiquetas();
+}
+function vecinos(n) {
+  const ns = new Set([n.id]), ls = new Set();
+  for (const l of G.graphData().links) {
+    const s = l.source.id ?? l.source, t = l.target.id ?? l.target;
+    if (s === n.id || t === n.id) { ns.add(s); ns.add(t); ls.add(l); }
+  }
+  return { ns, ls };
+}
+
+// Encuadre: ignora el 10 % de nodos más alejados (rezagados) para no achicar la red
+function ajusta(ms = 1400) {
+  const ns = G.graphData().nodes; if (!ns.length) return;
+  const d = ns.map(n => Math.hypot(n.x || 0, n.y || 0, n.z || 0)).sort((a, b) => a - b);
+  const lim = d[Math.min(d.length - 1, Math.floor(d.length * .9))] * 1.15 + 1;
+  G.zoomToFit(ms, 70, n => Math.hypot(n.x || 0, n.y || 0, n.z || 0) <= lim);
+}
+
+// ---------- grafo ----------
+const G = ForceGraph3D({ controlType: 'orbit' })($('grafo'))
+  .backgroundColor('#04060d')
+  .showNavInfo(false)
+  .nodeRelSize(1)
+  .nodeVal(0.001)
+  .nodeThreeObject(n => { const o = mkNodo(n); n.__obj = o; return o; })
+  .nodeThreeObjectExtend(false)
+  .nodeLabel(() => '')
+  .linkColor(l => { const lit = S.hl.links.size === 0 || S.hl.links.has(l); const c = new THREE.Color((l.source.col) || '#94a3b8');
+    return `rgba(${(c.r * 255) | 0},${(c.g * 255) | 0},${(c.b * 255) | 0},${lit ? (l.kind === 'puente' ? .35 : .6) : .04})`; })
+  .linkWidth(l => { const lit = S.hl.links.size === 0 || S.hl.links.has(l); return lit ? .25 + 1.6 * Math.pow(l.w / (maxV.link || 1), .4) : 0; })
+  .linkOpacity(1)
+  .linkDirectionalParticles(l => (S.par && (S.hl.links.size === 0 || S.hl.links.has(l))) ? (l.kind === 'inc' ? 2 : 1 + Math.round(2 * Math.pow(l.w / (maxV.link || 1), .3))) : 0)
+  .linkDirectionalParticleWidth(l => .6 + 1.4 * Math.pow(l.w / (maxV.link || 1), .3))
+  .linkDirectionalParticleSpeed(l => .004 + .004 * Math.pow(l.w / (maxV.link || 1), .3))
+  .linkDirectionalParticleColor(() => '#ffffff')
+  .d3VelocityDecay(.3)
+  .warmupTicks(30).cooldownTime(9000)
+  .onNodeHover(n => { S.hover = n ? n.id : null; $('grafo').style.cursor = n ? 'pointer' : 'default';
+    if (!n) { tip(null); if (!S.sel) { S.hl = { nodes: new Set(), links: new Set() }; aplicaHighlight(); } else resaltaSel(); return; }
+    const v = vecinos(n); S.hl = { nodes: v.ns, links: v.ls }; aplicaHighlight(); })
+  .onNodeClick(n => {
+    const ahora = Date.now();
+    if (S.lastClick.id === n.id && ahora - S.lastClick.t < 380) { S.lastClick = { id: null, t: 0 }; entrar(n); return; }
+    S.lastClick = { id: n.id, t: ahora }; seleccionar(n);
+  })
+  .onNodeDragEnd(n => { n.fx = n.x; n.fy = n.y; n.fz = n.z; })
+  .onBackgroundClick(() => { S.sel = null; S.hl = { nodes: new Set(), links: new Set() }; $('info').classList.add('oculto'); aplicaHighlight(); });
+
+// fondo de estrellas
+(() => { const N = 1800, p = new Float32Array(N * 3);
+  for (let i = 0; i < N * 3; i++) p[i] = (Math.random() - .5) * 3200;
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(p, 3));
+  const pts = new THREE.Points(g, new THREE.PointsMaterial({ color: 0x9fb4d8, size: 1.6, sizeAttenuation: true, transparent: true, opacity: .55, depthWrite: false }));
+  G.scene().add(pts); })();
+
+G.controls().autoRotate = true; G.controls().autoRotateSpeed = .45; G.controls().enableDamping = true;
+addEventListener('resize', () => G.width(innerWidth).height(innerHeight));
+addEventListener('mousemove', e => { const t = $('tip'); if (t.style.display === 'block') { t.style.left = (e.clientX + 14) + 'px'; t.style.top = (e.clientY + 14) + 'px'; } });
+
+function tip(n) {
+  const t = $('tip'); if (!n) { t.style.display = 'none'; return; }
+  const tot = n.t === 'inc' ? S.incTot[n.i] : n.t === 'ent' ? S.entTot[n.i] : S.provTot[n.i];
+  t.innerHTML = `<b>${esc(n.name)}</b><br><span class="sub">${{ inc: 'Inciso', ent: 'Ente público', prov: 'Proveedor' }[n.t]} · ${fmt(tot)}</span>`;
+  t.style.display = 'block';
+}
+G.onNodeHover(((orig) => n => { orig(n); tip(n); })(G.onNodeHover()));
+
+// ---------- selección / panel ----------
+function resaltaSel() {
+  const n = G.graphData().nodes.find(x => x.id === S.sel);
+  if (n) { const v = vecinos(n); S.hl = { nodes: v.ns, links: v.ls }; } else S.hl = { nodes: new Set(), links: new Set() };
+  aplicaHighlight();
+}
+function volar(n, dist = 120) {
+  const d = 1 + dist / Math.max(1, Math.hypot(n.x, n.y, n.z));
+  G.cameraPosition({ x: n.x * d, y: n.y * d, z: n.z * d }, n, 1100);
+}
+function seleccionar(n) { S.sel = n.id; resaltaSel(); panel(n); volar(n, 110 + radio(n) * 3); }
+
+function lista(items, col) {
+  const max = Math.max(...items.map(x => x.v), 1);
+  return items.map(x => `<div class="item" data-t="${x.t}" data-i="${x.i}"><span>${esc(x.n)}</span><span>${fmt(x.v, true)}</span></div><div class="barra" style="width:${Math.max(4, 100 * x.v / max)}%;background:${col}"></div>`).join('');
+}
+function panel(n) {
+  const el = $('info'); el.classList.remove('oculto');
+  const tipo = { inc: 'Inciso', ent: 'Ente público', prov: 'Proveedor' }[n.t];
+  let h = `<span class="tag" style="background:${n.col}">${tipo}</span><h2>${esc(n.name)}</h2>`;
+  const kp = (a, b) => `<div class="kpi"><b>${a}</b><span>${b}</span></div>`;
+  if (n.t === 'prov') {
+    const ps = S.provPairs[n.i];
+    h += `<div class="kpis">${kp(fmt(S.provTot[n.i]), 'adjudicado')}${kp(fmtN(S.provN[n.i]), 'adjudicaciones')}${kp(ps.length, 'entes')}${kp(S.provInc[n.i].size, 'incisos')}</div>`;
+    h += `<h3>Entes con los que se vincula</h3>` + lista(ps.slice(0, 10).map(q => ({ t: 'ent', i: q.e, n: D.ent[q.e][0], v: q.m })), n.col);
+  } else if (n.t === 'ent') {
+    const ps = S.entPairs[n.i], tot = S.entTot[n.i];
+    const c = ps.length ? ps[0].m / tot : 0;
+    h += `<div class="sub">${esc(D.inc[n.inc])}</div><div class="kpis">${kp(fmt(tot), 'adjudicado')}${kp(fmtN(S.entN[n.i]), 'adjudicaciones')}${kp(ps.length, 'proveedores')}${kp(Math.round(100 * c) + ' %', 'peso del mayor proveedor')}</div>`;
+    h += `<h3>Proveedores principales</h3>` + lista(ps.slice(0, 10).map(q => ({ t: 'prov', i: q.p, n: D.prov[q.p], v: q.m })), n.col);
+  } else {
+    let ne = 0, np = new Set(); for (let e = 0; e < NE; e++) if (D.ent[e][1] === n.i && S.entTot[e] > 0) { ne++; for (const q of S.entPairs[e]) np.add(q.p); }
+    h += `<div class="kpis">${kp(fmt(S.incTot[n.i]), 'adjudicado')}${kp(ne, 'entes')}${kp(fmtN(np.size), 'proveedores')}${kp('', '')}</div>`;
+    const es = []; for (let e = 0; e < NE; e++) if (D.ent[e][1] === n.i && S.entTot[e] > 0) es.push({ t: 'ent', i: e, n: D.ent[e][0], v: S.entTot[e] });
+    h += `<h3>Entes del inciso</h3>` + lista(es.sort((a, b) => b.v - a.v).slice(0, 8), n.col);
+    const rel = G.graphData().links.filter(l => (l.kind === 'inc') && ((l.source.id ?? l.source) === n.id || (l.target.id ?? l.target) === n.id))
+      .map(l => { const o = (l.source.id ?? l.source) === n.id ? l.target : l.source; const oo = o.id ? o : { i: +o.split(':')[1] }; return { t: 'inc', i: oo.i, n: D.inc[oo.i], v: l.w }; }).sort((a, b) => b.v - a.v).slice(0, 6);
+    if (rel.length) h += `<h3>Incisos conectados (proveedores en común)</h3>` + lista(rel, n.col);
+  }
+  h += `<div class="fila" style="margin-top:14px">${n.t === 'inc' ? '<button id="bEntrar">Entrar al inciso</button>' : '<button id="bEntrar">Ver vecindario</button>'}<button id="bCerrar" class="sec">Cerrar</button></div>`;
+  el.innerHTML = h;
+  el.querySelectorAll('.item').forEach(d => d.onclick = () => irA(d.dataset.t, +d.dataset.i));
+  $('bEntrar').onclick = () => entrar(n); $('bCerrar').onclick = () => $('grafo').dispatchEvent(new Event('x')) || (S.sel = null, $('info').classList.add('oculto'), S.hl = { nodes: new Set(), links: new Set() }, aplicaHighlight());
+}
+
+// ---------- navegación ----------
+function entrar(n) {
+  S.hist.push({ mode: S.mode, focus: S.focus });
+  if (n.t === 'inc') { S.mode = 'inciso'; S.focus = { t: 'inc', i: n.i }; }
+  else { S.mode = 'ego'; S.focus = { t: n.t, i: n.i }; }
+  render(true, n.id);
+}
+function irA(t, i) { S.hist.push({ mode: S.mode, focus: S.focus }); if (t === 'inc') { S.mode = 'inciso'; S.focus = { t, i }; } else { S.mode = 'ego'; S.focus = { t, i }; } render(true, nid(t, i)); }
+function volverAtras() { const h = S.hist.pop(); if (!h) { S.mode = 'incisos'; S.focus = null; } else { S.mode = h.mode; S.focus = h.focus; } render(true); }
+function setModo(m) { S.hist = []; S.mode = m; S.focus = null; render(true); }
+
+function migas() {
+  const c = [`<a data-m="incisos">Red de redes</a>`];
+  if (S.mode === 'completa') c[0] = `<a data-m="incisos">Red de redes</a> › Red completa`;
+  if (S.mode === 'inciso') c.push(esc(D.inc[S.focus.i]));
+  if (S.mode === 'ego') { const nm = S.focus.t === 'prov' ? D.prov[S.focus.i] : D.ent[S.focus.i][0]; c.push('Vecindario: ' + esc(nm)); }
+  $('crumbs').innerHTML = c.join(' › '); $('crumbs').querySelectorAll('a').forEach(a => a.onclick = () => setModo(a.dataset.m));
+  document.querySelectorAll('#modos .chip').forEach(b => b.classList.toggle('on', b.dataset.m === (S.mode === 'completa' ? 'completa' : 'incisos')));
+  $('dl').textContent = { incisos: 'Vínculos entre incisos', inciso: 'Proveedores mostrados', completa: 'Vínculos mostrados', ego: 'Amplitud del vecindario' }[S.mode];
+}
+
+function render(animar, foco) {
+  const g = S.mode === 'incisos' ? buildIncisos() : S.mode === 'inciso' ? buildInciso(S.focus.i) : S.mode === 'completa' ? buildCompleta() : buildEgo(S.focus);
+  maxV = { link: Math.max(1, ...g.links.map(l => l.w)) };
+  for (const n of g.nodes) maxV[n.t] = Math.max(maxV[n.t] || 1, n.val);
+  S.sel = null; S.hover = null; S.hl = { nodes: new Set(), links: new Set() }; $('info').classList.add('oculto');
+  const chg = { incisos: -420, inciso: -70, completa: -34, ego: -60 }[S.mode], dist = { incisos: 120, inciso: 36, completa: 24, ego: 34 }[S.mode];
+  G.d3Force('charge').strength(chg);
+  G.d3Force('link').distance(l => dist * (l.kind === 'puente' ? 2.2 : 1));
+  G.graphData(g);
+  migas();
+  G.controls().autoRotate = S.rot;
+  setTimeout(() => {
+    if (foco) { const n = g.nodes.find(x => x.id === foco); if (n) { G.cameraPosition({ x: 0, y: 40, z: 380 }, { x: 0, y: 0, z: 0 }, 1400); } }
+    else G.cameraPosition({ x: 0, y: 30, z: S.mode === 'incisos' ? 640 : 360 }, { x: 0, y: 0, z: 0 }, animar ? 1800 : 0);
+    refrescaEtiquetas();
+  }, 700);
+  setTimeout(() => { if (!S.sel) ajusta(1400); refrescaEtiquetas(); }, 3200);
+  if (foco) setTimeout(() => { const n = G.graphData().nodes.find(x => x.id === foco); if (n) { S.sel = n.id; resaltaSel(); panel(n); } }, 2200);
+}
+
+// ---------- controles ----------
+function recalcular() { agregar(); render(false); }
+$('mon').onchange = e => { S.mon = e.target.value; recalcular(); };
+for (const id of ['y0', 'y1']) { const r = $(id); r.min = D.anios[0]; r.max = D.anios[1]; }
+$('y0').value = S.y0; $('y1').value = S.y1;
+function años() { $('yl').textContent = S.y0 === S.y1 ? S.y0 : `${S.y0}–${S.y1}`; }
+$('y0').oninput = e => { S.y0 = Math.min(+e.target.value, S.y1); e.target.value = S.y0; años(); }; $('y0').onchange = recalcular;
+$('y1').oninput = e => { S.y1 = Math.max(+e.target.value, S.y0); e.target.value = S.y1; años(); }; $('y1').onchange = recalcular;
+$('dens').oninput = e => { S.dens = +e.target.value; $('dv').textContent = S.dens + ' %'; }; $('dens').onchange = () => render(false);
+$('oLab').onchange = e => { S.lab = e.target.checked; refrescaEtiquetas(); };
+$('oPar').onchange = e => { S.par = e.target.checked; G.linkDirectionalParticles(G.linkDirectionalParticles()); };
+$('oRot').onchange = e => { S.rot = e.target.checked; G.controls().autoRotate = S.rot; };
+$('bCam').onclick = () => ajusta(1200);
+$('bBack').onclick = volverAtras;
+document.querySelectorAll('#modos .chip').forEach(b => b.onclick = () => setModo(b.dataset.m));
+addEventListener('keydown', e => { if (e.key === 'Escape') { if (S.sel) { S.sel = null; $('info').classList.add('oculto'); S.hl = { nodes: new Set(), links: new Set() }; aplicaHighlight(); } else volverAtras(); }
+  if (e.key === ' ' && e.target.tagName !== 'INPUT') { e.preventDefault(); $('oRot').click(); } });
+
+// ---------- búsqueda ----------
+let cand = [];
+$('q').oninput = e => {
+  const q = norm(e.target.value.trim()), r = $('res'); if (q.length < 2) { r.style.display = 'none'; return; }
+  cand = [];
+  for (let i = 0; i < NE; i++) if (entN[i].includes(q) && S.entTot[i] > 0) cand.push({ t: 'ent', i, n: D.ent[i][0], v: S.entTot[i] });
+  for (let i = 0; i < NP; i++) if (provN[i].includes(q) && S.provTot[i] > 0) cand.push({ t: 'prov', i, n: D.prov[i], v: S.provTot[i] });
+  cand.sort((a, b) => b.v - a.v); cand = cand.slice(0, 12);
+  r.innerHTML = cand.map((c, k) => `<div data-k="${k}">${esc(c.n)}<small>${c.t === 'ent' ? 'ente' : 'proveedor'} · ${fmt(c.v, true)}</small></div>`).join('') || '<div class="sub">Sin resultados con estos filtros</div>';
+  r.style.display = 'block';
+  r.querySelectorAll('div[data-k]').forEach(d => d.onclick = () => { const c = cand[+d.dataset.k]; r.style.display = 'none'; $('q').value = ''; irA(c.t, c.i); });
+};
+$('q').onkeydown = e => { if (e.key === 'Enter' && cand[0]) { $('res').style.display = 'none'; irA(cand[0].t, cand[0].i); $('q').value = ''; } };
+document.addEventListener('click', e => { if (!e.target.closest('#q,#res')) $('res').style.display = 'none'; });
+
+// ---------- arranque ----------
+$('dv').textContent = S.dens + ' %'; años();
+agregar();
+G.width(innerWidth).height(innerHeight);
+G.cameraPosition({ x: 0, y: 200, z: 1100 });
+render(true);
+setTimeout(() => $('carga').classList.add('fuera'), 500);
+window.__red3d = { S, G, irA, setModo };
+})();
+</script>
+</body>
+</html>

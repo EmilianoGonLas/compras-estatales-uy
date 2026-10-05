@@ -13,6 +13,27 @@ publicadas por ARCE en formato OCDS, 2002–2025 (1,8 millones de adjudicaciones
 (UTE) hace salir sus proveedores desde el nodo, y un clic abre su detalle. Tamaño del nodo
 y grosor de la línea = monto del vínculo.*
 
+## Red 3D: red de redes
+
+![Red 3D: incisos, detalle de un inciso, vecindario de un proveedor y red completa](docs/img/red3d.gif)
+
+Pestaña **Red 3D** (y página independiente `www/red3d.html`, three.js + 3d-force-graph).
+Tres niveles que se encadenan:
+
+1. **Red de redes** — cada nodo es un *inciso* (ministerios, intendencias, empresas públicas…);
+   dos incisos se unen por los **proveedores que tienen en común** (grosor = monto compartido).
+2. **Doble clic en un inciso** — se abren sus entes y sus mayores proveedores; los proveedores
+   que también venden a otros incisos tiran un hilo hacia ellos (los *puentes*).
+3. **Doble clic en un ente o proveedor** — su vecindario a dos saltos. O **buscalo** por nombre.
+
+Además: **Red completa** (los mayores vínculos, coloreados por inciso), filtros de moneda y años,
+densidad ajustable, panel de detalle con sus vínculos principales, resaltado de vecinos al pasar
+el mouse, partículas que fluyen por los vínculos, rotación automática y nodos que se pueden fijar
+arrastrándolos. Es 100 % del lado del navegador (`www/red3d-data.js` trae los 190 mil pares-año
+de mayor monto); necesita WebGL y carga three.js desde jsDelivr.
+
+## Más vistas
+
 | Panorama | Ficha de proveedor | Informe PDF |
 |---|---|---|
 | ![](docs/img/panorama.png) | ![](docs/img/ficha-proveedor.png) | ![](docs/img/informe-pdf.png) |
@@ -41,6 +62,7 @@ Rscript scripts/01_descargar_ocds.R    # ZIP anuales -> insumos/compras_estatale
 Rscript scripts/02_codigueras.R        # incisos y unidades ejecutoras (XML de ARCE)
 Rscript scripts/03_preparar_datos_app.R [desde] [hasta]   # OCDS -> adjudicaciones.parquet (~25 min)
 Rscript scripts/04_pares.R             # marca atípicos + tabla de vínculos (pares.parquet)
+Rscript scripts/05_datos_red3d.R       # datos de la Red 3D (www/red3d-data.js)
 shiny::runApp()                        # o Rscript scripts/deploy.R
 ```
 

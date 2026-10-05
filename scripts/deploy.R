@@ -6,6 +6,7 @@
 rsconnect::deployApp(
   appDir   = ".",
   appFiles = c("app.R", "global.R", "R/formato.R", "R/informe.R", "docs/acerca.html",
+               "www/red3d.html", "www/red3d-data.js",
                "data/app/pares.parquet", "data/app/adjudicaciones.parquet"),
   appName        = "ComprasEstatales",
   account        = "emilianogonzalez",

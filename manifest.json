@@ -2445,7 +2445,7 @@
   },
   "files": {
     "app.R": {
-      "checksum": "d3731dc6bec4115dcb81ec7afb159af0"
+      "checksum": "31e23762023fd93153dd53ff2e576933"
     },
     "data/app/adjudicaciones.parquet": {
       "checksum": "27493a95da60d5c209df40fec121cb43"
@@ -2464,6 +2464,12 @@
     },
     "R/informe.R": {
       "checksum": "5e4490516a0b6256e56406c4306177f8"
+    },
+    "www/red3d-data.js": {
+      "checksum": "08ec4ce5067224712173f94ed60d72eb"
+    },
+    "www/red3d.html": {
+      "checksum": "f8dbc9a5f40bb6eb700f234f61d66c36"
     }
   },
   "users": null
