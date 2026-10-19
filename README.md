@@ -93,6 +93,19 @@ detalle de `adjudicaciones.parquet` (60 MB) a demanda con arrow.
 `R/informe.R` los arma con ggplot2 + gridExtra sobre `cairo_pdf`: sin LaTeX ni Chrome,
 así corren igual en esta PC y en shinyapps.io.
 
+## Celulares
+
+![La app en un celular: filtros colapsables, indicadores 2×2, y la Red 3D a pantalla completa con su ficha como panel inferior](docs/img/celular.png)
+
+Todo lo móvil vive en `@media` (≤ 767 px en la app; ≤ 820 px o ≤ 520 px de alto en la Red 3D): **el escritorio no cambia**
+(se verificó comparando capturas y la posición de los 37 elementos del panel antes y después).
+
+- **Filtros** arriba, en una barra colapsable con el resumen («⚙ Filtros · UYU · 2021–2025»), en vez de al final de la página.
+- **Indicadores** en 2×2, **tablas** con sólo las columnas útiles (`ocultar-mov`), barras con el valor debajo del nombre.
+- **Red 3D**: barra compacta (búsqueda + ⚙), los controles se abren con ⚙ y se cierran solos al elegir algo; la ficha de un nodo
+  es un panel inferior con ✕; nodos y etiquetas más grandes; aviso de gestos (tocá, doble toque, pellizcá); en la pestaña
+  de la app se oculta la barra de filtros porque el 3D trae los suyos.
+
 ## Arranque rápido (importante en la nube)
 
 Connect Cloud apaga la app tras unos minutos sin uso; cada visita "en frío" tiene que levantarla antes de que el

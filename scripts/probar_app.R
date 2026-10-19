@@ -12,7 +12,7 @@ testServer(app, {
                       prov = "R/080115970019", comp = "61-1", n_red = 20, red_foco = "")
     for (o in c("k1", "k2", "k3", "k4", "p_serie", "p_top", "p_tipos", "t_prov", "t_comp", "ficha_prov", "ficha_comp",
                 "f_top_proveedor", "f_serie_proveedor", "f_det_proveedor", "f_tab_proveedor",
-                "f_top_ente", "f_serie_ente", "f_det_ente", "f_tab_ente", "red", "t_atip", "t_cob"))
+                "f_top_ente", "f_serie_ente", "f_det_ente", "f_tab_ente", "red", "t_atip", "t_cob", "resumen_filtros"))
       chk(paste(modo, o), output[[o]])
   }
   session$setInputs(red_foco = "p:R/080115970019"); chk("red con foco", output$red)

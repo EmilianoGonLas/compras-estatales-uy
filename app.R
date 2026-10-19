@@ -67,9 +67,31 @@ ui <- page_navbar(
     .bv-v{text-align:center;font-size:.72rem;color:var(--bs-secondary-color);margin-bottom:3px;white-space:nowrap}
     .bv-x{text-align:center;font-size:.72rem;color:var(--bs-secondary-color);margin-top:4px}
     .bv-muchas .bv-x{font-size:.62rem}
-    .bv-muchas .bv-c:nth-child(even) .bv-x{visibility:hidden}")),
+    .bv-muchas .bv-c:nth-child(even) .bv-x{visibility:hidden}
+    .filtros-toggle{display:none}
+    .iframe3d{width:100%;height:calc(100vh - 70px);min-height:560px;border:0;border-radius:10px;background:#04060d}
+    /* ---- Celulares: todo lo de acá abajo sólo aplica en pantallas angostas; el escritorio no cambia ---- */
+    @media (max-width:767.98px){
+      .ocultar-mov{display:none!important}
+      .filtros-toggle{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--bs-border-color);border-radius:10px;cursor:pointer;background:var(--bs-tertiary-bg);font-size:.9rem}
+      .filtros-toggle span{color:var(--bs-secondary-color);font-size:.78rem;text-align:right}
+      .sidebar:not(.abierto) .sidebar-content>*:not(.filtros-toggle){display:none!important}
+      .fila-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}.fila-kpis>*{grid-column:auto!important}
+      .kpi{padding:9px 11px;margin-bottom:6px}.kpi-v{font-size:1.15rem}.kpi-t{font-size:.72rem}
+      .bh{grid-template-columns:1fr auto;grid-template-areas:'l v' 'b b';row-gap:2px;padding:4px 0}
+      .bh-l{grid-area:l}.bh-v{grid-area:v}.bh-b{grid-area:b}
+      .bv{height:210px;gap:3px}
+      .bv-v{white-space:normal;font-size:.62rem;line-height:1.05;word-break:break-word}
+      #red{height:62vh!important;min-height:360px}
+      .leyenda-red{display:none}
+      .iframe3d{height:calc(100dvh - 104px);min-height:420px;border-radius:0}
+      .bslib-sidebar-layout:has(.tab-pane.active[data-value='Red 3D'])>.sidebar{display:none}   /* el 3D trae sus propios controles */
+      .card-header{font-size:.92rem}
+    }")),
     tags$meta(name = "viewport", content = "width=device-width, initial-scale=1"))),
-  sidebar = sidebar(width = 270,
+  sidebar = sidebar(width = 270, open = list(desktop = "open", mobile = "always-above"),
+    div(class = "filtros-toggle", onclick = "this.closest('.sidebar').classList.toggle('abierto')",
+        tags$b("⚙ Filtros"), textOutput("resumen_filtros", inline = TRUE)),
     selectInput("moneda", "Moneda",
                 choices = setNames(monedas, ifelse(monedas %in% names(etiqueta_moneda),
                                                    etiqueta_moneda[monedas], monedas))),
@@ -84,7 +106,7 @@ ui <- page_navbar(
   ),
 
   nav_panel("Panorama",
-    layout_columns(col_widths = c(3, 3, 3, 3), uiOutput("k1"), uiOutput("k2"), uiOutput("k3"), uiOutput("k4")),
+    layout_columns(col_widths = c(3, 3, 3, 3), class = "fila-kpis", uiOutput("k1"), uiOutput("k2"), uiOutput("k3"), uiOutput("k4")),
     layout_columns(col_widths = c(6, 6),
       card(card_header("Monto adjudicado por año", span(class = "nota ms-2", "(pasá el mouse por una barra)")), uiOutput("p_serie")),
       card(card_header("Mayores proveedores del período"), uiOutput("p_top"))),
@@ -118,8 +140,7 @@ ui <- page_navbar(
       card(visNetworkOutput("red", height = 680)))),
 
   nav_panel("Red 3D",
-    tags$iframe(src = "red3d.html", title = "Red 3D de compras estatales", allowfullscreen = NA,
-                style = "width:100%;height:calc(100vh - 70px);min-height:560px;border:0;border-radius:10px;background:#04060d"),
+    tags$iframe(src = "red3d.html", title = "Red 3D de compras estatales", allowfullscreen = NA, class = "iframe3d"),
     p(class = "nota", "Red de redes en 3D: incisos → entes → proveedores. Usa sus propios controles ",
       "(no responde a los filtros del panel lateral). ",
       tags$a(href = "red3d.html", target = "_blank", "Abrir a pantalla completa"))),
@@ -160,6 +181,10 @@ server <- function(input, output, session) {
     d
   })
   mon <- reactive(input$moneda)
+  output$resumen_filtros <- renderText({
+    req(input$moneda, input$anios)
+    paste0(input$moneda, " · ", input$anios[1], "–", input$anios[2], if (nzchar(input$tipo %||% "")) paste0(" · ", input$tipo) else "")
+  })
 
   # Modo oscuro por defecto: hasta que el cliente informa, `input$modo` es NULL.
   oscuro <- reactive(!identical(input$modo, "light"))
@@ -203,7 +228,8 @@ server <- function(input, output, session) {
   mostrar_rank <- function(r) {
     datatable(r[, !"id"], selection = "single", rownames = FALSE, options = list(
       pageLength = 10, dom = "frtip", language = dt_es, autoWidth = FALSE,
-      columnDefs = list(list(targets = c(1, 2), className = "dt-right"))), class = "compact stripe") |>
+      columnDefs = list(list(targets = 1, className = "dt-right ocultar-mov"), list(targets = 2, className = "dt-right"),
+                        list(targets = c(3, 4), className = "ocultar-mov"))), class = "compact stripe") |>
       formatCurrency("Monto", currency = "", mark = ".", dec.mark = ",", digits = 0) |>
       formatPercentage("Peso", 0)
   }
@@ -228,7 +254,7 @@ server <- function(input, output, session) {
     ns <- if (es_prov) "dl_prov" else "dl_comp"
     tagList(
       h4(nombre), if (!es_prov) p(class = "nota", d$inciso[1]),
-      layout_columns(col_widths = c(3, 3, 3, 3),
+      layout_columns(col_widths = c(3, 3, 3, 3), class = "fila-kpis",
         kpi("Monto", fmt_monto(sum(d$monto), mon())), kpi("Adjudicaciones", fmt_n(sum(d$n))),
         kpi(if (es_prov) "Entes" else "Proveedores", fmt_n(nrow(cc))),
         kpi("Peso del principal", fmt_pct(conc$top1))),
@@ -272,7 +298,8 @@ server <- function(input, output, session) {
       if (tipo == "proveedor") d$proveedor <- NULL else d$comprador <- NULL
       names(d) <- c("Fecha", if (tipo == "proveedor") "Ente" else "Proveedor", "Objeto", "Procedimiento", "Monto")
       datatable(d, rownames = FALSE, class = "compact stripe",
-                options = list(pageLength = 8, dom = "tp", scrollX = TRUE, language = dt_es)) |>
+                options = list(pageLength = 8, dom = "tp", scrollX = TRUE, language = dt_es,
+                               columnDefs = list(list(targets = 3, className = "ocultar-mov")))) |>
         formatCurrency("Monto", currency = "", mark = ".", dec.mark = ",", digits = 0)
     })
   })
@@ -449,7 +476,8 @@ server <- function(input, output, session) {
     output[[paste0("f_tab_", tipo)]] <- renderDT({
       x <- vinc_tbl(tipo)
       datatable(x[, !"id"], rownames = FALSE, selection = "single", class = "compact stripe",
-                options = list(pageLength = 8, dom = "frtip", language = dt_es)) |>
+                options = list(pageLength = 8, dom = "frtip", language = dt_es,
+                               columnDefs = list(list(targets = c(1, 4), className = "ocultar-mov")))) |>
         formatCurrency("Monto", currency = "", mark = ".", dec.mark = ",", digits = 0) |>
         formatPercentage("Peso", 1)
     })
