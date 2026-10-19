@@ -120,6 +120,23 @@ reposo: datos a los ~44 s con 1 reintento; con el servidor despierto, ~5 s.
 Medido en local, con cachés vacías: **8,7 s → 4,5 s** hasta la primera respuesta y **431 → 246 MB** de RAM.
 `Rscript scripts/probar_app.R` ejercita todas las salidas (claro y oscuro) sin navegador.
 
+## Memoria (importante en shinyapps.io: 1 GB)
+
+Una sesión completa (todas las pestañas, una ficha y un informe PDF) pasó de **1,85 GB a ~650 MB**. Las causas, por si vuelven:
+
+- `uniqueN()` dentro de un `by=` con 17.000 grupos (`data.table`) reparte memoria por hilo y R no la devuelve: sólo abrir la
+  pestaña *Vínculos* sumaba +940 MB. Ahora se agrega en dos pasadas (`pares_pe` → totales) y `setDTthreads(2)`.
+- `arrow` usa el asignador del sistema (`ARROW_DEFAULT_MEMORY_POOL=system`) y 2 hilos de CPU (+500 MB → +20 MB al abrir una ficha).
+  **No** bajar los hilos de E/S a 1 (`set_io_thread_count(1)`): el escaneo del dataset se cuelga para siempre.
+- Se nota en los logs de shinyapps.io como `Container event: oom (out of memory)`; en Connect Cloud (4 GB) pasa inadvertido.
+
+## Red 3D: arranque
+
+La página arma la red apenas carga, aunque el iframe de la pestaña esté oculto (tamaño 0, animación pausada), con un tamaño
+provisional: el acomodo se precalcula (`warmupTicks`) y la cámara encuadra todo cuando las posiciones están listas. Al
+mostrarse sólo se ajusta al tamaño real con un acercamiento suave, así el primer cuadro ya tiene el vecindario completo. (Antes la
+cámara nacía con `NaN` al crearse el grafo con el iframe en 0×0 y la escena arrancaba vacía.)
+
 ## Publicar
 
 - **Posit Connect Cloud** (plan gratis: 5 apps, 4 GB) — donde está publicada. Desde R, con

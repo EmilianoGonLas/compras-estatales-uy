@@ -16,6 +16,8 @@ suppressPackageStartupMessages({
 # y viaja con la app, así el servidor sólo lee el CSS ya compilado.
 if (dir.exists("sass-cache")) options(sass.cache = sass::sass_file_cache("sass-cache"))
 
+setDTthreads(2)   # data.table reserva memoria por hilo en los group-by: con 2 alcanza y cabe en 1 GB
+
 # Vínculos (comprador x proveedor x año x moneda x procedimiento): en memoria.
 # Se guardan como factores (se leen 8 veces más rápido) y se pasan a texto acá.
 pares <- readRDS("data/app/pares.rds")
@@ -28,10 +30,15 @@ TIPOS <- meta$tipos
 
 # Detalle por adjudicación (38 MB): se abre recién cuando alguien pide una ficha o un informe,
 # y es ahí cuando se carga arrow (~0,5 s). No pesa en el arranque.
+# Memoria: arrow con el asignador del sistema (devuelve memoria al SO, a diferencia del pool por defecto) y 2 hilos
+# de CPU (cada hilo reserva buffers). Cuenta porque shinyapps.io mata el proceso a 1 GB.
 .adj <- NULL
 adj_ds <- function() {
   if (is.null(.adj)) {
+    Sys.setenv(ARROW_DEFAULT_MEMORY_POOL = "system")
     suppressPackageStartupMessages(library(arrow))
+    # OJO: no bajar los hilos de E/S a 1 (set_io_thread_count(1)): el escaneo del dataset se bloquea para siempre.
+    try(set_cpu_count(2), silent = TRUE)
     .adj <<- open_dataset("data/app/adjudicaciones.parquet")
   }
   .adj

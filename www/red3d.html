@@ -322,7 +322,7 @@ function vecinos(n) {
 
 // Encuadre: centra en la mediana y abarca el 80 % de los nodos más cercanos; los rezagados
 // quedan afuera del cuadro en vez de achicar toda la red.
-function ajusta(ms = 1400, q = .8) {
+function ajusta(ms = 1400, q = .8, desde = 1) {
   const ns = G.graphData().nodes; if (!ns.length) return;
   const P = ns.map(n => [n.x || 0, n.y || 0, n.z || 0]);
   const med = a => { const b = [...a].sort((x, y) => x - y); return b[b.length >> 1]; };
@@ -331,8 +331,18 @@ function ajusta(ms = 1400, q = .8) {
   const R = d[Math.min(d.length - 1, Math.floor(d.length * q))] + 4;
   const cam = G.camera(), fov = cam.fov * Math.PI / 180, half = Math.min(fov / 2, Math.atan(Math.tan(fov / 2) * cam.aspect));
   const dist = R * 1.15 / Math.sin(half);
-  const dir = new THREE.Vector3(cam.position.x - c[0], cam.position.y - c[1], cam.position.z - c[2]).normalize();
-  G.cameraPosition({ x: c[0] + dir.x * dist, y: c[1] + dir.y * dist, z: c[2] + dir.z * dist }, { x: c[0], y: c[1], z: c[2] }, ms);
+  const dir = new THREE.Vector3(cam.position.x - c[0], cam.position.y - c[1], cam.position.z - c[2]);
+  if (!isFinite(dir.length()) || dir.length() < 1e-6) dir.set(0, .25, 1);   // la cámara pudo nacer con NaN (iframe oculto, aspecto 0/0)
+  dir.normalize();
+  const pos = k => ({ x: c[0] + dir.x * dist * k, y: c[1] + dir.y * dist * k, z: c[2] + dir.z * dist * k }), mira = { x: c[0], y: c[1], z: c[2] };
+  if (desde > 1) G.cameraPosition(pos(desde), mira, 0);     // arranca más lejos…
+  G.cameraPosition(pos(1), mira, ms);                         // …y se acerca hasta encuadrar la red completa
+}
+
+function cuandoHayPosiciones(fn, intentos = 40) {
+  const ns = G.graphData().nodes;
+  if (ns.length && ns.every(n => Number.isFinite(n.x) && Number.isFinite(n.y) && Number.isFinite(n.z))) fn();
+  else if (intentos > 0) setTimeout(() => cuandoHayPosiciones(fn, intentos - 1), 25);
 }
 
 // ---------- grafo ----------
@@ -373,7 +383,6 @@ const G = ForceGraph3D({ controlType: 'orbit' })($('grafo'))
   G.scene().add(pts); })();
 
 G.controls().autoRotate = true; G.controls().autoRotateSpeed = .45; G.controls().enableDamping = true;
-addEventListener('resize', () => G.width($('grafo').clientWidth).height($('grafo').clientHeight));
 addEventListener('mousemove', e => { const t = $('tip'); if (t.style.display === 'block') { t.style.left = (e.clientX + 14) + 'px'; t.style.top = (e.clientY + 14) + 'px'; } });
 
 function tip(n) {
@@ -458,17 +467,17 @@ function render(animar, foco) {
   const chg = { incisos: -420, inciso: -70, completa: -34, ego: -60 }[S.mode], dist = { incisos: 120, inciso: 36, completa: 24, ego: 34 }[S.mode];
   G.d3Force('charge').strength(chg);
   G.d3Force('link').distance(l => dist * (l.kind === 'puente' ? 2.2 : 1));
+  // La red se acomoda ANTES del primer cuadro (warmup) y la cámara encuadra todo de entrada: al abrir la pestaña
+  // ya se ve el vecindario completo, en vez de una escena vacía que recién se va armando.
+  G.warmupTicks({ incisos: 260, inciso: 180, completa: 70, ego: 180 }[S.mode]);
   G.graphData(g);
   migas();
   G.controls().autoRotate = S.rot;
-  setTimeout(() => {
-    if (foco) { const n = g.nodes.find(x => x.id === foco); if (n) { G.cameraPosition({ x: 0, y: 40, z: 380 }, { x: 0, y: 0, z: 0 }, 1400); } }
-    else G.cameraPosition({ x: 0, y: 30, z: S.mode === 'incisos' ? 640 : 360 }, { x: 0, y: 0, z: 0 }, animar ? 1800 : 0);
-    refrescaEtiquetas();
-  }, 700);
-  setTimeout(() => { if (!S.sel) ajusta(1400); refrescaEtiquetas(); }, 3200);
-  setTimeout(() => { if (!S.sel) ajusta(1200); }, 6800);
-  if (foco) setTimeout(() => { const n = G.graphData().nodes.find(x => x.id === foco); if (n) { S.sel = n.id; resaltaSel(); panel(n); } }, 2200);
+  // graphData() calcula las posiciones un instante después: se espera a tenerlas antes de encuadrar
+  cuandoHayPosiciones(() => { ajusta(animar ? 1800 : 0, .8, animar ? 1.8 : 1); refrescaEtiquetas(); });
+  setTimeout(() => { if (!S.sel) ajusta(1200); refrescaEtiquetas(); }, 2600);   // reencuadra cuando la física termina de asentarse
+  setTimeout(() => { if (!S.sel) ajusta(1000); }, 6500);
+  if (foco) setTimeout(() => { const n = G.graphData().nodes.find(x => x.id === foco); if (n) { S.sel = n.id; resaltaSel(); panel(n); } }, 1900);
 }
 
 // ---------- controles ----------
@@ -507,10 +516,31 @@ document.addEventListener('click', e => { if (!e.target.closest('#q,#res')) $('r
 // ---------- arranque ----------
 $('dv').textContent = S.dens + ' %'; años();
 agregar();
-G.width($('grafo').clientWidth).height($('grafo').clientHeight);
-G.cameraPosition({ x: 0, y: 200, z: 1100 });
-render(true);
-setTimeout(() => $('carga').classList.add('fuera'), 500);
+// Dentro de la app Shiny este documento vive en un iframe de una pestaña oculta (tamaño 0, animación pausada).
+// La red se arma igual desde el principio con un tamaño provisional —el acomodo se precalcula (warmup) y la cámara
+// encuadra todo—, y al mostrarse sólo se ajusta al tamaño real: el primer cuadro ya tiene el vecindario completo.
+let listo = false, mostrada = false;
+const tam = el => el.clientWidth >= 50 && el.clientHeight >= 50;
+function arrancar() {
+  if (listo) return;
+  listo = true;
+  const el = $('grafo'), ok = tam(el);
+  mostrada = ok;
+  G.width(ok ? el.clientWidth : 1280).height(ok ? el.clientHeight : 720);
+  G.cameraPosition({ x: 0, y: 200, z: 1100 }, { x: 0, y: 0, z: 0 }, 0);   // reinicia la cámara (nace con NaN si el iframe mide 0)
+  render(ok);                                                               // oculto: sin animación de entrada
+  setTimeout(() => $('carga').classList.add('fuera'), 300);
+}
+function alMostrarse() {
+  const el = $('grafo'); if (!tam(el)) return;
+  if (!listo) return arrancar();
+  G.width(el.clientWidth).height(el.clientHeight);
+  if (!mostrada) { mostrada = true; if (!S.sel) ajusta(1100, .8, 1.3); refrescaEtiquetas(); }   // acercamiento suave a la red ya armada
+}
+addEventListener('resize', alMostrarse);
+if ('IntersectionObserver' in window) new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) alMostrarse(); }).observe($('grafo'));
+document.addEventListener('visibilitychange', alMostrarse);
+arrancar();
 window.__red3d = { S, G, irA, setModo, entrar, seleccionar, render, ajusta };
 
 // ---------- utilidades de grabación (sólo con ?rec=1) ----------

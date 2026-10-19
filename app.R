@@ -313,8 +313,11 @@ server <- function(input, output, session) {
   }
 
   # Totales por nodo en el período vigente (tamaño de los nodos)
-  tot_prov <- reactive(P()[, .(monto = sum(monto), n = sum(n), k = uniqueN(comprador_id)), by = .(id = proveedor_id, nombre = proveedor)])
-  tot_comp <- reactive(P()[, .(monto = sum(monto), n = sum(n), k = uniqueN(proveedor_id)), by = .(id = comprador_id, nombre = comprador)])
+  # Dos pasadas (par proveedor-ente -> total por nodo). Un uniqueN() dentro de un by= con 17.000 grupos
+  # reparte memoria por hilo y llevaba el proceso de 310 a 1.260 MB: shinyapps.io (1 GB) lo mataba por OOM.
+  pares_pe <- reactive(P()[, .(monto = sum(monto), n = sum(n)), by = .(proveedor_id, proveedor, comprador_id, comprador)])
+  tot_prov <- reactive(pares_pe()[, .(monto = sum(monto), n = sum(n), k = .N), by = .(id = proveedor_id, nombre = proveedor)])
+  tot_comp <- reactive(pares_pe()[, .(monto = sum(monto), n = sum(n), k = .N), by = .(id = comprador_id, nombre = comprador)])
 
   nodo_dt <- function(ids, es_prov) {
     t <- if (es_prov) tot_prov() else tot_comp()
