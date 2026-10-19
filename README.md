@@ -5,7 +5,7 @@ públicos se vinculan**, con informes descargables en PDF. Datos: adjudicaciones
 publicadas por ARCE en formato OCDS, 2002–2025 (1,8 millones de adjudicaciones,
 ~17.000 proveedores con adjudicaciones en 2021–2025).
 
-🔗 **App en vivo:** https://01a10cf0-1909-a394-8b57-96b25efaaa0c.share.connect.posit.cloud/
+🔗 **App en vivo:** https://emilianogonlas-compras-estatales-uy.share.connect.posit.cloud/
 
 ![Red de vínculos: se elige un proveedor, doble clic expande un ente, un clic abre el detalle](docs/img/red-vinculos.gif)
 
@@ -139,12 +139,12 @@ cámara nacía con `NaN` al crearse el grafo con el iframe en 0×0 y la escena a
 
 ## Publicar
 
-- **Posit Connect Cloud** (plan gratis: 5 apps, 4 GB) — donde está publicada. Desde R, con
+- **Posit Connect Cloud** (plan gratis: 5 apps, 4 GB) — **donde está publicada** (con URL personalizada: *Settings → URL → Customize your URL*). Desde R, con
   `rsconnect` ≥ 1.11 y credenciales de API de Connect Cloud registradas
   (`rsconnect::connectCloudClientCredentials()`): `Rscript scripts/precalentar_css.R && Rscript scripts/deploy_cloud.R`. También se
   puede conectar el repo en connect.posit.cloud → *Publish* → Shiny → `main` / `app.R`
   (el `manifest.json` ya está; se regenera con `rsconnect::writeManifest()`).
-- **shinyapps.io**: `Rscript scripts/deploy.R`.
+- **shinyapps.io** (alternativa, 1 GB de RAM; ver la sección *Memoria*): `Rscript scripts/deploy.R`.
 
 ## Estado
 
