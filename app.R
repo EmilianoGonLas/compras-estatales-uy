@@ -14,15 +14,20 @@ ui <- page_navbar(
   theme = bs_theme(version = 5, primary = "#1f4e79", base_font = font_google("Source Sans 3"),
                    heading_font = font_google("Source Sans 3")),
   header = tags$head(tags$style(HTML("
-    .kpi{background:#eef3f8;border-radius:8px;padding:12px 14px;margin-bottom:10px}
-    .kpi-v{font-size:1.5rem;font-weight:700;color:#1f4e79;line-height:1.1}
-    .kpi-t{font-size:.8rem;color:#6b7280}.kpi-s{font-size:.75rem;color:#9ca3af}
-    .nota{font-size:.82rem;color:#6b7280}
+    :root{--acento:#1f4e79;--acento2:#e07b39}
+    [data-bs-theme=dark]{--acento:#7cb7f5;--acento2:#f0a05a}
+    .kpi{background:var(--bs-tertiary-bg);border-radius:8px;padding:12px 14px;margin-bottom:10px}
+    .kpi-v{font-size:1.5rem;font-weight:700;color:var(--acento);line-height:1.1}
+    .kpi-t{font-size:.8rem;color:var(--bs-secondary-color)}.kpi-s{font-size:.75rem;color:var(--bs-secondary-color);opacity:.8}
+    .nota{font-size:.82rem;color:var(--bs-secondary-color)}
     @keyframes aparece{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-    .info-nodo{animation:aparece .35s ease-out;border-left:4px solid #1f4e79;background:#f8fafc;border-radius:8px;padding:12px 14px;margin-top:10px}
-    .info-nodo.prov{border-left-color:#e07b39}
+    .info-nodo{animation:aparece .35s ease-out;border-left:4px solid var(--acento);background:var(--bs-tertiary-bg);border-radius:8px;padding:12px 14px;margin-top:10px}
+    .info-nodo.prov{border-left-color:var(--acento2)}
     .info-nodo h5{font-size:1rem;margin-bottom:6px}
-    .leyenda-red{font-size:.8rem;color:#6b7280;margin-top:8px}")),
+    .leyenda-red{font-size:.8rem;color:var(--bs-secondary-color);margin-top:8px}
+    [data-bs-theme=dark] .btn-outline-primary{--bs-btn-color:var(--acento);--bs-btn-border-color:var(--acento);--bs-btn-hover-bg:var(--acento);--bs-btn-hover-border-color:var(--acento);--bs-btn-hover-color:#0b1220;--bs-btn-active-bg:var(--acento);--bs-btn-active-color:#0b1220}
+    [data-bs-theme=dark] .btn-primary{--bs-btn-bg:#2f6fb0;--bs-btn-border-color:#2f6fb0;--bs-btn-hover-bg:#3b82c4;--bs-btn-hover-border-color:#3b82c4}
+    bslib-input-dark-mode{margin-left:.5rem}")),
     tags$meta(name = "viewport", content = "width=device-width, initial-scale=1")),
   sidebar = sidebar(width = 270,
     selectInput("moneda", "Moneda",
@@ -68,7 +73,7 @@ ui <- page_navbar(
           "• <b>Doble clic</b>: expande sus vínculos (salen del nodo).<br>",
           "• Pasá el mouse por una línea para ver el monto.<br>",
           "• Arrastrá los nodos; rueda para zoom.<br>",
-          "<span style='color:#e07b39'>●</span> proveedor &nbsp; <span style='color:#1f4e79'>■</span> ente público. ",
+          "<span style='color:var(--acento2)'>●</span> proveedor &nbsp; <span style='color:var(--acento)'>■</span> ente público. ",
           "El tamaño es el monto total del período; el grosor de la línea, el monto del vínculo.")))),
       card(visNetworkOutput("red", height = 680)))),
 
@@ -89,7 +94,10 @@ ui <- page_navbar(
     card(card_header("Adjudicaciones y proveedores identificados por año"), DTOutput("t_cob"))),
 
   nav_panel("Acerca de",
-    card(card_body(HTML(paste(readLines("docs/acerca.html", encoding = "UTF-8"), collapse = "\n")))))
+    card(card_body(HTML(paste(readLines("docs/acerca.html", encoding = "UTF-8"), collapse = "\n"))))),
+
+  nav_spacer(),
+  nav_item(input_dark_mode(id = "modo", mode = "dark"))
 )
 
 server <- function(input, output, session) {
@@ -116,6 +124,18 @@ server <- function(input, output, session) {
   })
   mon <- reactive(input$moneda)
 
+  # Modo oscuro por defecto: hasta que el cliente informa, `input$modo` es NULL.
+  oscuro <- reactive(!identical(input$modo, "light"))
+  col1 <- reactive(if (oscuro()) "#60a5fa" else "#1f4e79")
+  col2 <- reactive(if (oscuro()) "#93c5fd" else "#4f81b0")
+  tp <- function(p) {   # fondo transparente y ejes legibles en cualquier modo
+    fg <- if (oscuro()) "#e5e7eb" else "#1f2937"; gr <- if (oscuro()) "rgba(255,255,255,.12)" else "rgba(0,0,0,.1)"
+    p |> layout(paper_bgcolor = "rgba(0,0,0,0)", plot_bgcolor = "rgba(0,0,0,0)", font = list(color = fg),
+                xaxis = list(gridcolor = gr, zerolinecolor = gr), yaxis = list(gridcolor = gr, zerolinecolor = gr),
+                hoverlabel = list(font = list(color = "#ffffff"))) |>
+      config(displayModeBar = FALSE)
+  }
+
   # ---------------- Panorama ----------------
   output$k1 <- renderUI(kpi("Monto adjudicado", fmt_monto(sum(P()$monto), mon())))
   output$k2 <- renderUI(kpi("Adjudicaciones", fmt_n(sum(P()$n))))
@@ -127,24 +147,24 @@ server <- function(input, output, session) {
   })
   output$p_serie <- renderPlotly({
     d <- P()[, .(monto = sum(monto)), by = anio][order(anio)]
-    plot_ly(d, x = ~anio, y = ~monto / 1e6, type = "bar", marker = list(color = "#1f4e79"),
+    plot_ly(d, x = ~anio, y = ~monto / 1e6, type = "bar", marker = list(color = col1()),
             hovertemplate = paste0("%{x}: %{y:,.1f} M ", mon(), "<extra></extra>")) |>
-      layout(xaxis = list(title = "", dtick = 1), yaxis = list(title = paste("millones de", mon())))
+      layout(xaxis = list(title = "", dtick = 1), yaxis = list(title = paste("millones de", mon()))) |> tp()
   })
   output$p_top <- renderPlotly({
     d <- P()[, .(monto = sum(monto)), by = .(proveedor_id, proveedor)][order(-monto)][1:12]
     d[, etq := substr(proveedor, 1, 26)]
     plot_ly(d, y = ~reorder(etq, monto), x = ~monto / 1e6, type = "bar", orientation = "h",
-            marker = list(color = "#1f4e79"), text = ~proveedor, textposition = "none",
+            marker = list(color = col1()), text = ~proveedor, textposition = "none",
             hovertemplate = paste0("%{text}<br>%{x:,.1f} M ", mon(), "<extra></extra>")) |>
-      layout(xaxis = list(title = paste("millones de", mon())), yaxis = list(title = "", automargin = TRUE))
+      layout(xaxis = list(title = paste("millones de", mon())), yaxis = list(title = "", automargin = TRUE)) |> tp()
   })
   output$p_tipos <- renderPlotly({
     d <- P()[, .(monto = sum(monto)), by = tipo][order(-monto)][1:10]
     plot_ly(d, y = ~reorder(substr(tipo, 1, 40), monto), x = ~monto / 1e6, type = "bar", orientation = "h",
-            marker = list(color = "#4f81b0"),
+            marker = list(color = col2()),
             hovertemplate = paste0("%{x:,.1f} M ", mon(), "<extra></extra>")) |>
-      layout(xaxis = list(title = paste("millones de", mon())), yaxis = list(title = "", automargin = TRUE))
+      layout(xaxis = list(title = paste("millones de", mon())), yaxis = list(title = "", automargin = TRUE)) |> tp()
   })
 
   # ---------------- Rankings ----------------
@@ -216,15 +236,15 @@ server <- function(input, output, session) {
       d <- subset_ficha(tipo)[, .(monto = sum(monto)), by = c(contra)][order(-monto)][1:12]
       d[, etq := substr(get(contra), 1, 40)]
       plot_ly(d, y = ~reorder(etq, monto), x = ~monto / 1e6, type = "bar", orientation = "h",
-              marker = list(color = "#1f4e79"), text = d[[contra]], textposition = "none",
+              marker = list(color = col1()), text = d[[contra]], textposition = "none",
               hovertemplate = paste0("%{text}<br>%{x:,.2f} M ", mon(), "<extra></extra>")) |>
-        layout(xaxis = list(title = paste("millones de", mon())), yaxis = list(title = "", automargin = TRUE))
+        layout(xaxis = list(title = paste("millones de", mon())), yaxis = list(title = "", automargin = TRUE)) |> tp()
     })
     output[[paste0("f_serie_", tipo)]] <- renderPlotly({
       d <- subset_ficha(tipo)[, .(monto = sum(monto)), by = anio][order(anio)]
-      plot_ly(d, x = ~anio, y = ~monto / 1e6, type = "bar", marker = list(color = "#4f81b0"),
+      plot_ly(d, x = ~anio, y = ~monto / 1e6, type = "bar", marker = list(color = col2()),
               hovertemplate = paste0("%{x}: %{y:,.2f} M ", mon(), "<extra></extra>")) |>
-        layout(xaxis = list(title = "", dtick = 1), yaxis = list(title = "millones"))
+        layout(xaxis = list(title = "", dtick = 1), yaxis = list(title = "millones")) |> tp()
     })
     output[[paste0("f_det_", tipo)]] <- renderDT({
       id <- if (tipo == "proveedor") input$prov else input$comp
@@ -334,12 +354,14 @@ server <- function(input, output, session) {
     g <- grafo_inicial()
     validate(need(nrow(g$nodes) > 0, "Sin adjudicaciones con estos filtros para ese nodo."))
     isolate(ids_red(g$nodes$id))
+    dk <- oscuro()
     visNetwork(g$nodes, g$edges) |>
       visGroups(groupname = "Proveedor", color = list(background = "#e07b39", border = "#b45309", highlight = "#f59e0b")) |>
-      visGroups(groupname = "Ente público", color = list(background = "#1f4e79", border = "#12304d", highlight = "#3b82f6")) |>
-      visNodes(scaling = list(min = 10, max = 48), font = list(size = 13, face = "Source Sans 3"),
+      visGroups(groupname = "Ente público", color = list(background = if (dk) "#3b82f6" else "#1f4e79", border = if (dk) "#93c5fd" else "#12304d", highlight = "#60a5fa")) |>
+      visNodes(scaling = list(min = 10, max = 48),
+               font = list(size = 13, face = "Source Sans 3", color = if (dk) "#e5e7eb" else "#343434", strokeWidth = if (dk) 3 else 0, strokeColor = "#0b1220"),
                shadow = list(enabled = TRUE, size = 6, x = 1, y = 2)) |>
-      visEdges(scaling = list(min = 1, max = 12), color = list(color = "#cbd5e1", highlight = "#1f4e79", hover = "#1f4e79"),
+      visEdges(scaling = list(min = 1, max = 12), color = list(color = if (dk) "#475569" else "#cbd5e1", highlight = if (dk) "#7cb7f5" else "#1f4e79", hover = if (dk) "#7cb7f5" else "#1f4e79"),
                smooth = list(enabled = TRUE, type = "continuous"), arrows = list(to = list(enabled = TRUE, scaleFactor = 0.4))) |>
       visOptions(highlightNearest = list(enabled = TRUE, degree = 1, hover = TRUE, algorithm = "hierarchical")) |>
       visInteraction(hover = TRUE, tooltipDelay = 80, navigationButtons = TRUE, zoomSpeed = 0.6) |>

@@ -1,6 +1,29 @@
 <!doctype html>
 <html lang="es">
 <head>
+<script>
+/* Modo grabación (?rec=1): reloj virtual. rAF, timers, performance.now y Date.now avanzan sólo cuando
+   se llama a __step(ms); así cada cuadro se renderiza completo y el video sale a 30 fps parejos. */
+if (/[?&]rec=1/.test(location.search)) {
+  let T = 0, id = 0; const raf = new Map(), tim = new Map(); const D0 = Date.now();
+  window.requestAnimationFrame = cb => { raf.set(++id, cb); return id; };
+  window.cancelAnimationFrame = k => raf.delete(k);
+  performance.now = () => T; Date.now = () => D0 + T;
+  window.setTimeout = (f, ms = 0, ...a) => { const k = ++id; tim.set(k, { t: T + ms, f, a }); return k; };
+  window.clearTimeout = k => tim.delete(k);
+  window.setInterval = (f, ms = 0, ...a) => { const k = ++id; tim.set(k, { t: T + ms, f, a, e: Math.max(1, ms) }); return k; };
+  window.clearInterval = window.clearTimeout;
+  window.__step = ms => {
+    T += ms;
+    for (const [k, r] of [...tim]) if (r.t <= T) { if (r.e) r.t += r.e; else tim.delete(k); try { r.f(...r.a); } catch (e) { console.error(e); } }
+    const cbs = [...raf.values()]; raf.clear();
+    for (const cb of cbs) { try { cb(T); } catch (e) { console.error(e); } }
+    if (window.__tick) window.__tick(T);
+    return T;
+  };
+  document.documentElement.classList.add('rec');
+}
+</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Red 3D · Compras estatales de Uruguay</title>
@@ -52,12 +75,20 @@
   .spin{width:42px;height:42px;border-radius:50%;border:3px solid rgba(125,211,252,.2);border-top-color:var(--acento);animation:g 1s linear infinite}
   @keyframes g{to{transform:rotate(360deg)}}
   @media(max-width:820px){#ctrl{width:calc(100% - 28px);max-height:42%}#info{top:auto;bottom:14px;width:calc(100% - 28px);max-height:38%}#ayuda{display:none}}
+  #cap{position:fixed;left:50%;bottom:6%;transform:translateX(-50%);z-index:30;max-width:70%;text-align:center;font-size:30px;font-weight:600;line-height:1.25;color:#fff;background:rgba(4,6,13,.62);backdrop-filter:blur(8px);border:1px solid rgba(125,211,252,.35);border-radius:16px;padding:14px 28px;opacity:0;pointer-events:none;text-shadow:0 2px 12px rgba(0,0,0,.6)}
+  #cap small{display:block;font-size:19px;font-weight:400;color:#9fb4d8;margin-top:4px}
+  #cur{position:fixed;left:0;top:0;width:26px;height:26px;margin:-13px 0 0 -13px;border:3px solid #fff;border-radius:50%;z-index:40;opacity:0;pointer-events:none;box-shadow:0 0 14px rgba(125,211,252,.9),inset 0 0 8px rgba(125,211,252,.6)}
+  #rip{position:fixed;left:0;top:0;width:26px;height:26px;margin:-13px 0 0 -13px;border:3px solid #7dd3fc;border-radius:50%;z-index:39;opacity:0;pointer-events:none}
+  .rec *,.rec *::before,.rec *::after{transition:none!important;animation:none!important}
+  .rec #ayuda,.rec #tip{display:none!important}
+  .rec #grafo{inset:auto;left:310px;top:0;right:0;bottom:0}
 </style>
 </head>
 <body>
 <div id="carga"><div class="spin"></div><div class="sub">Armando la red…</div></div>
 <div id="grafo"></div>
 <div id="tip"></div>
+<div id="cap"></div><div id="cur"></div><div id="rip"></div>
 
 <div id="ctrl" class="panel">
   <h1>Red de redes · Compras estatales</h1>
@@ -289,12 +320,19 @@ function vecinos(n) {
   return { ns, ls };
 }
 
-// Encuadre: ignora el 10 % de nodos más alejados (rezagados) para no achicar la red
-function ajusta(ms = 1400) {
+// Encuadre: centra en la mediana y abarca el 80 % de los nodos más cercanos; los rezagados
+// quedan afuera del cuadro en vez de achicar toda la red.
+function ajusta(ms = 1400, q = .8) {
   const ns = G.graphData().nodes; if (!ns.length) return;
-  const d = ns.map(n => Math.hypot(n.x || 0, n.y || 0, n.z || 0)).sort((a, b) => a - b);
-  const lim = d[Math.min(d.length - 1, Math.floor(d.length * .9))] * 1.15 + 1;
-  G.zoomToFit(ms, 70, n => Math.hypot(n.x || 0, n.y || 0, n.z || 0) <= lim);
+  const P = ns.map(n => [n.x || 0, n.y || 0, n.z || 0]);
+  const med = a => { const b = [...a].sort((x, y) => x - y); return b[b.length >> 1]; };
+  const c = [0, 1, 2].map(i => med(P.map(p => p[i])));
+  const d = P.map(p => Math.hypot(p[0] - c[0], p[1] - c[1], p[2] - c[2])).sort((x, y) => x - y);
+  const R = d[Math.min(d.length - 1, Math.floor(d.length * q))] + 4;
+  const cam = G.camera(), fov = cam.fov * Math.PI / 180, half = Math.min(fov / 2, Math.atan(Math.tan(fov / 2) * cam.aspect));
+  const dist = R * 1.15 / Math.sin(half);
+  const dir = new THREE.Vector3(cam.position.x - c[0], cam.position.y - c[1], cam.position.z - c[2]).normalize();
+  G.cameraPosition({ x: c[0] + dir.x * dist, y: c[1] + dir.y * dist, z: c[2] + dir.z * dist }, { x: c[0], y: c[1], z: c[2] }, ms);
 }
 
 // ---------- grafo ----------
@@ -315,7 +353,7 @@ const G = ForceGraph3D({ controlType: 'orbit' })($('grafo'))
   .linkDirectionalParticleSpeed(l => .004 + .004 * Math.pow(l.w / (maxV.link || 1), .3))
   .linkDirectionalParticleColor(() => '#ffffff')
   .d3VelocityDecay(.3)
-  .warmupTicks(30).cooldownTime(9000)
+  .warmupTicks(30).cooldownTime(window.__step ? 1e9 : 9000)
   .onNodeHover(n => { S.hover = n ? n.id : null; $('grafo').style.cursor = n ? 'pointer' : 'default';
     if (!n) { tip(null); if (!S.sel) { S.hl = { nodes: new Set(), links: new Set() }; aplicaHighlight(); } else resaltaSel(); return; }
     const v = vecinos(n); S.hl = { nodes: v.ns, links: v.ls }; aplicaHighlight(); })
@@ -335,7 +373,7 @@ const G = ForceGraph3D({ controlType: 'orbit' })($('grafo'))
   G.scene().add(pts); })();
 
 G.controls().autoRotate = true; G.controls().autoRotateSpeed = .45; G.controls().enableDamping = true;
-addEventListener('resize', () => G.width(innerWidth).height(innerHeight));
+addEventListener('resize', () => G.width($('grafo').clientWidth).height($('grafo').clientHeight));
 addEventListener('mousemove', e => { const t = $('tip'); if (t.style.display === 'block') { t.style.left = (e.clientX + 14) + 'px'; t.style.top = (e.clientY + 14) + 'px'; } });
 
 function tip(n) {
@@ -429,6 +467,7 @@ function render(animar, foco) {
     refrescaEtiquetas();
   }, 700);
   setTimeout(() => { if (!S.sel) ajusta(1400); refrescaEtiquetas(); }, 3200);
+  setTimeout(() => { if (!S.sel) ajusta(1200); }, 6800);
   if (foco) setTimeout(() => { const n = G.graphData().nodes.find(x => x.id === foco); if (n) { S.sel = n.id; resaltaSel(); panel(n); } }, 2200);
 }
 
@@ -468,11 +507,33 @@ document.addEventListener('click', e => { if (!e.target.closest('#q,#res')) $('r
 // ---------- arranque ----------
 $('dv').textContent = S.dens + ' %'; años();
 agregar();
-G.width(innerWidth).height(innerHeight);
+G.width($('grafo').clientWidth).height($('grafo').clientHeight);
 G.cameraPosition({ x: 0, y: 200, z: 1100 });
 render(true);
 setTimeout(() => $('carga').classList.add('fuera'), 500);
-window.__red3d = { S, G, irA, setModo };
+window.__red3d = { S, G, irA, setModo, entrar, seleccionar, render, ajusta };
+
+// ---------- utilidades de grabación (sólo con ?rec=1) ----------
+if (window.__step) {
+  const st = { cap: null, cur: { x: -50, y: -50, a: 0, mv: null }, rip: null };
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  window.__cap = (html, dur) => { st.cap = { html, t0: performance.now(), t1: performance.now() + dur }; $('cap').innerHTML = html; };
+  window.__capOff = () => { st.cap = null; $('cap').style.opacity = 0; };
+  window.__moveCursor = (x, y, ms) => { st.cur.mv = { x0: st.cur.x, y0: st.cur.y, x1: x, y1: y, t0: performance.now(), ms }; st.cur.a = 1; };
+  window.__hideCursor = () => { st.cur.a = 0; $('cur').style.opacity = 0; };
+  window.__click = () => { st.rip = { t0: performance.now(), x: st.cur.x, y: st.cur.y }; };
+  window.__nodeXY = id => { const n = G.graphData().nodes.find(x => x.id === id); if (!n) return null; const c = G.graph2ScreenCoords(n.x, n.y, n.z), r = $('grafo').getBoundingClientRect(); return [r.left + c.x, r.top + c.y]; };
+  window.__tick = T => {
+    if (st.cap) { const o = clamp(Math.min((T - st.cap.t0) / 450, (st.cap.t1 - T) / 450), 0, 1); $('cap').style.opacity = o; if (T > st.cap.t1) st.cap = null; }
+    const c = st.cur;
+    if (c.mv) { const k = clamp((T - c.mv.t0) / c.mv.ms, 0, 1), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      c.x = c.mv.x0 + (c.mv.x1 - c.mv.x0) * e; c.y = c.mv.y0 + (c.mv.y1 - c.mv.y0) * e; if (k >= 1) c.mv = null; }
+    const el = $('cur'); el.style.left = c.x + 'px'; el.style.top = c.y + 'px'; el.style.opacity = c.a;
+    const r = $('rip');
+    if (st.rip) { const k = clamp((T - st.rip.t0) / 550, 0, 1); r.style.left = st.rip.x + 'px'; r.style.top = st.rip.y + 'px';
+      r.style.opacity = 1 - k; r.style.transform = `scale(${1 + 2.6 * k})`; if (k >= 1) st.rip = null; } else r.style.opacity = 0;
+  };
+}
 })();
 </script>
 </body>

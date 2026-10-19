@@ -53,7 +53,7 @@ de mayor monto); necesita WebGL y carga three.js desde jsDelivr.
   contraparte) y el botón **Ver su red de vínculos**.
 - **Calidad de datos** — los montos atípicos excluidos y la cobertura por año.
 
-Filtros globales: moneda, años, tipo de procedimiento, incluir/excluir atípicos.
+Filtros globales: moneda, años, tipo de procedimiento, incluir/excluir atípicos. **Modo oscuro por defecto**, con un ícono (sol/luna) arriba a la derecha para pasar a modo claro.
 
 ## Pipeline
 
@@ -63,6 +63,7 @@ Rscript scripts/02_codigueras.R        # incisos y unidades ejecutoras (XML de A
 Rscript scripts/03_preparar_datos_app.R [desde] [hasta]   # OCDS -> adjudicaciones.parquet (~25 min)
 Rscript scripts/04_pares.R             # marca atípicos + tabla de vínculos (pares.parquet)
 Rscript scripts/05_datos_red3d.R       # datos de la Red 3D (www/red3d-data.js)
+Rscript scripts/grabar_video_red3d.R   # (opcional) graba el MP4 de la Red 3D con reloj virtual, a 30 fps
 shiny::runApp()                        # o Rscript scripts/deploy.R
 ```
 
