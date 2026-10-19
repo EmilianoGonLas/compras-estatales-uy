@@ -18,7 +18,28 @@ ui <- page_navbar(
   theme = bs_theme(version = 5, primary = "#1f4e79",
                    base_font = "'Source Sans 3', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
                    heading_font = "'Source Sans 3', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"),
-  header = tags$head(fuente_local, tags$style(HTML("
+  header = tagList(
+    # Si el proxy de Connect Cloud falla con 503 en el CSS/JS (pasa en los arranques en frío), la página queda
+    # sin estilo y sin datos. Este bloque no depende de ningún archivo estático: avisa y recarga sola (máx. 3 veces).
+    div(id = "cargando", style = "padding:8px 14px;font:14px system-ui,sans-serif;background:#0b1220;color:#9fb4d8;text-align:center",
+        "Cargando la app… la primera visita tarda unos segundos; si hace falta, se reintenta sola."),
+    tags$script(HTML("
+      (function () {
+        var K = 'compras_reintentos', n = +(sessionStorage.getItem(K) || 0), t0 = Date.now();
+        function listo() {
+          var nav = document.querySelector('.navbar'), k = document.getElementById('k1');
+          var css = nav && getComputedStyle(nav).display === 'flex';
+          var js = window.Shiny && Shiny.shinyapp && Shiny.shinyapp.isConnected && Shiny.shinyapp.isConnected();
+          return css && js && k && k.innerText.trim().length > 0;
+        }
+        function revisar() {
+          if (listo()) { sessionStorage.removeItem(K); var c = document.getElementById('cargando'); if (c) c.remove(); return; }
+          if (Date.now() - t0 > 14000 && n < 3) { sessionStorage.setItem(K, n + 1); location.reload(); return; }
+          setTimeout(revisar, 1000);
+        }
+        window.addEventListener('load', function () { setTimeout(revisar, 2000); });
+      })();")),
+    tags$head(fuente_local, tags$style(HTML("
     :root{--acento:#1f4e79;--acento2:#e07b39}
     [data-bs-theme=dark]{--acento:#7cb7f5;--acento2:#f0a05a}
     .kpi{background:var(--bs-tertiary-bg);border-radius:8px;padding:12px 14px;margin-bottom:10px}
@@ -47,7 +68,7 @@ ui <- page_navbar(
     .bv-x{text-align:center;font-size:.72rem;color:var(--bs-secondary-color);margin-top:4px}
     .bv-muchas .bv-x{font-size:.62rem}
     .bv-muchas .bv-c:nth-child(even) .bv-x{visibility:hidden}")),
-    tags$meta(name = "viewport", content = "width=device-width, initial-scale=1")),
+    tags$meta(name = "viewport", content = "width=device-width, initial-scale=1"))),
   sidebar = sidebar(width = 270,
     selectInput("moneda", "Moneda",
                 choices = setNames(monedas, ifelse(monedas %in% names(etiqueta_moneda),
@@ -132,6 +153,7 @@ server <- function(input, output, session) {
 
   # Subconjunto vigente según los filtros globales
   P <- reactive({
+    req(input$moneda, input$anios)   # antes de que lleguen las entradas no se dibuja nada (en vez de "NA")
     d <- pares[moneda == input$moneda & anio >= input$anios[1] & anio <= input$anios[2]]
     if (nzchar(input$tipo)) d <- d[tipo == input$tipo]
     if (!isTRUE(input$atipicos)) d <- d[atipico == FALSE]

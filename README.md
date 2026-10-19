@@ -109,7 +109,13 @@ proxy se rinda (error *«upstream connect error … connection timeout»*). Por 
 conexión, y cada visita tiene que levantarlo entre que llega el HTML y se abre el websocket. El resultado era
 un `503 upstream connect error … connection timeout` y 30 s o más hasta ver datos (medido en un Chrome real; una app
 de "hola mundo" falla igual). Con **60 s** (el máximo) la primera pantalla con datos aparece en ~5 s, también
-tras 2 minutos de reposo. Hay que dejarlo así después de cada *Republish*.
+tras 2 minutos de reposo. Después de un redeploy conviene verificar que siga en 60 s (en la prueba del 19/10 se mantuvo).
+
+**Lo que no se puede arreglar desde la app:** cuando el servidor entero estuvo apagado (~5 min sin visitas), la
+primera carga puede recibir algunos `503` del proxy en archivos sueltos (CSS/JS, `xhr_send`) y quedar sin estilo ni datos.
+Por eso `app.R` trae un autorreparador que no depende de ningún archivo estático: muestra «Cargando…» y, si a los 14 s
+no hay estilo + conexión + datos, recarga la página sola (máx. 3 veces). Medido en un Chrome limpio tras 14 min de
+reposo: datos a los ~44 s con 1 reintento; con el servidor despierto, ~5 s.
 
 Medido en local, con cachés vacías: **8,7 s → 4,5 s** hasta la primera respuesta y **431 → 246 MB** de RAM.
 `Rscript scripts/probar_app.R` ejercita todas las salidas (claro y oscuro) sin navegador.
