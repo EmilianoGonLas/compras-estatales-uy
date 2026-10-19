@@ -4,8 +4,9 @@
 
 # Barras horizontales: etiqueta | barra | valor. `tit` es el texto completo del tooltip.
 barras_h <- function(etq, val, tit = etq, col = "var(--acento)", fmt = fmt_monto) {
+  ok <- !is.na(val); etq <- etq[ok]; tit <- tit[ok]; val <- val[ok]   # [1:12] rellena con NA si hay menos filas
   if (!length(val)) return(div(class = "nota", "Sin datos con estos filtros."))
-  mx <- max(val, na.rm = TRUE); if (!is.finite(mx) || mx <= 0) mx <- 1
+  mx <- max(val); if (!is.finite(mx) || mx <= 0) mx <- 1
   div(class = "bh-wrap", lapply(seq_along(val), function(i)
     div(class = "bh", title = paste0(tit[i], " — ", fmt(val[i])),
         div(class = "bh-l", etq[i]),
@@ -15,8 +16,9 @@ barras_h <- function(etq, val, tit = etq, col = "var(--acento)", fmt = fmt_monto
 
 # Barras verticales (serie anual): una columna por categoría; el valor se ve arriba si hay pocas barras.
 barras_v <- function(x, val, col = "var(--acento)", fmt = fmt_monto) {
+  ok <- !is.na(val); x <- x[ok]; val <- val[ok]
   if (!length(val)) return(div(class = "nota", "Sin datos con estos filtros."))
-  mx <- max(val, na.rm = TRUE); if (!is.finite(mx) || mx <= 0) mx <- 1
+  mx <- max(val); if (!is.finite(mx) || mx <= 0) mx <- 1
   pocas <- length(val) <= 8
   div(class = paste("bv-wrap", if (!pocas) "bv-muchas"),
       div(class = "bv", lapply(seq_along(val), function(i)

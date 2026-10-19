@@ -104,6 +104,13 @@ proxy se rinda (error *«upstream connect error … connection timeout»*). Por 
 - los gráficos son HTML/CSS (`R/graficos.R`), sin plotly (−1,2 s y ~100 MB de RAM);
 - la tipografía está empaquetada en `www/fonts/` (antes el servidor la bajaba de Google en cada arranque).
 
+**El ajuste que más importa está en el panel de Connect Cloud, no en el código:** *Settings → Runtime →
+**Idle timeout***. Viene en **5 s** (el mínimo): el proceso de R se apaga 5 s después de cerrarse la última
+conexión, y cada visita tiene que levantarlo entre que llega el HTML y se abre el websocket. El resultado era
+un `503 upstream connect error … connection timeout` y 30 s o más hasta ver datos (medido en un Chrome real; una app
+de "hola mundo" falla igual). Con **60 s** (el máximo) la primera pantalla con datos aparece en ~5 s, también
+tras 2 minutos de reposo. Hay que dejarlo así después de cada *Republish*.
+
 Medido en local, con cachés vacías: **8,7 s → 4,5 s** hasta la primera respuesta y **431 → 246 MB** de RAM.
 `Rscript scripts/probar_app.R` ejercita todas las salidas (claro y oscuro) sin navegador.
 
