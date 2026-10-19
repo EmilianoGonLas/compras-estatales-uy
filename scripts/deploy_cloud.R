@@ -4,9 +4,8 @@
 # NO guardar el clientSecret en el repo. Uso: Rscript scripts/deploy_cloud.R (desde la raíz)
 rsconnect::deployApp(
   appDir = ".", appPrimaryDoc = "app.R",
-  appFiles = c("app.R", "global.R", "R/formato.R", "R/informe.R", "docs/acerca.html",
-               "www/red3d.html", "www/red3d-data.js",
-               "data/app/pares.parquet", "data/app/adjudicaciones.parquet"),
+  appFiles = c("app.R", "global.R", "R", "docs/acerca.html", "www", "sass-cache",
+               "data/app/pares.rds", "data/app/meta.rds", "data/app/adjudicaciones.parquet"),
   appName = "compras-estatales-uy", appTitle = "Compras estatales de Uruguay",
   account = "emilianogonlas", server = "connect.posit.cloud",
   forceUpdate = TRUE, launch.browser = FALSE)

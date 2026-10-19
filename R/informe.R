@@ -37,6 +37,8 @@ AZUL <- "#1f4e79"; GRIS <- "#6b7280"
 
 # tipo: "proveedor" | "ente"; id: proveedor_id o comprador_id
 informe_pdf <- function(tipo, id, moneda, anios, file, atipicos = FALSE, tipo_proc = "") {
+  # ggplot2 + gridExtra recién acá: no pesan en el arranque de la app (sólo la primera descarga carga ~0,7 s)
+  suppressPackageStartupMessages({ library(ggplot2); library(gridExtra) })
   mon <- moneda; a0 <- anios[1]; a1 <- anios[2]
   P <- pares[moneda == mon & anio >= a0 & anio <= a1]
   if (!atipicos) P <- P[atipico == FALSE]
@@ -94,7 +96,7 @@ informe_pdf <- function(tipo, id, moneda, anios, file, atipicos = FALSE, tipo_pr
                            x = 0.02, hjust = 0, gp = grid::gpar(fontsize = 8.5))
 
   # ---- detalle: las mayores adjudicaciones (lectura a demanda del parquet) ----
-  d <- adj_ds |> filter(estado == "active", moneda == mon, anio >= a0, anio <= a1)
+  d <- adj_ds() |> filter(estado == "active", moneda == mon, anio >= a0, anio <= a1)
   d <- if (es_prov) d |> filter(proveedor_id == id) else d |> filter(comprador_id == id)
   if (!atipicos) d <- d |> filter(!atipico)
   if (nzchar(tipo_proc)) d <- d |> filter(tipo == tipo_proc)

@@ -8,12 +8,17 @@ kpi <- function(titulo, valor, sub = NULL) {
       if (!is.null(sub)) div(class = "kpi-s", sub))
 }
 
+# Tipografía empaquetada en www/fonts: evita que el servidor la baje de Google al arrancar.
+fuente_local <- htmltools::htmlDependency("Source_Sans_3_local", "0.4.10", src = c(file = "www/fonts"),
+                                          stylesheet = "font.css")
+
 ui <- page_navbar(
   id = "nav", fillable = FALSE,
   title = "Compras estatales · Uruguay",
-  theme = bs_theme(version = 5, primary = "#1f4e79", base_font = font_google("Source Sans 3"),
-                   heading_font = font_google("Source Sans 3")),
-  header = tags$head(tags$style(HTML("
+  theme = bs_theme(version = 5, primary = "#1f4e79",
+                   base_font = "'Source Sans 3', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+                   heading_font = "'Source Sans 3', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"),
+  header = tags$head(fuente_local, tags$style(HTML("
     :root{--acento:#1f4e79;--acento2:#e07b39}
     [data-bs-theme=dark]{--acento:#7cb7f5;--acento2:#f0a05a}
     .kpi{background:var(--bs-tertiary-bg);border-radius:8px;padding:12px 14px;margin-bottom:10px}
@@ -27,7 +32,21 @@ ui <- page_navbar(
     .leyenda-red{font-size:.8rem;color:var(--bs-secondary-color);margin-top:8px}
     [data-bs-theme=dark] .btn-outline-primary{--bs-btn-color:var(--acento);--bs-btn-border-color:var(--acento);--bs-btn-hover-bg:var(--acento);--bs-btn-hover-border-color:var(--acento);--bs-btn-hover-color:#0b1220;--bs-btn-active-bg:var(--acento);--bs-btn-active-color:#0b1220}
     [data-bs-theme=dark] .btn-primary{--bs-btn-bg:#2f6fb0;--bs-btn-border-color:#2f6fb0;--bs-btn-hover-bg:#3b82c4;--bs-btn-hover-border-color:#3b82c4}
-    bslib-input-dark-mode{margin-left:.5rem}")),
+    bslib-input-dark-mode{margin-left:.5rem}
+    .bh{display:grid;grid-template-columns:minmax(90px,36%) 1fr minmax(84px,auto);gap:10px;align-items:center;padding:3px 0;font-size:.85rem}
+    .bh:hover{background:var(--bs-tertiary-bg);border-radius:6px}
+    .bh-l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .bh-b{height:14px;background:var(--bs-tertiary-bg);border-radius:7px;overflow:hidden}
+    .bh-b span{display:block;height:100%;border-radius:7px;min-width:2px}
+    .bh-v{text-align:right;color:var(--bs-secondary-color);font-size:.78rem;white-space:nowrap}
+    .bv{display:flex;align-items:flex-end;gap:5px;height:250px;padding-top:6px}
+    .bv-c{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:stretch;height:100%;min-width:0}
+    .bv-c:hover .bv-b{opacity:.8}
+    .bv-b{border-radius:5px 5px 0 0;min-height:2px;transition:opacity .15s}
+    .bv-v{text-align:center;font-size:.72rem;color:var(--bs-secondary-color);margin-bottom:3px;white-space:nowrap}
+    .bv-x{text-align:center;font-size:.72rem;color:var(--bs-secondary-color);margin-top:4px}
+    .bv-muchas .bv-x{font-size:.62rem}
+    .bv-muchas .bv-c:nth-child(even) .bv-x{visibility:hidden}")),
     tags$meta(name = "viewport", content = "width=device-width, initial-scale=1")),
   sidebar = sidebar(width = 270,
     selectInput("moneda", "Moneda",
@@ -46,9 +65,9 @@ ui <- page_navbar(
   nav_panel("Panorama",
     layout_columns(col_widths = c(3, 3, 3, 3), uiOutput("k1"), uiOutput("k2"), uiOutput("k3"), uiOutput("k4")),
     layout_columns(col_widths = c(6, 6),
-      card(card_header("Monto adjudicado por año"), plotlyOutput("p_serie", height = 330)),
-      card(card_header("Mayores proveedores del período"), plotlyOutput("p_top", height = 330))),
-    card(card_header("Procedimientos"), plotlyOutput("p_tipos", height = 260))),
+      card(card_header("Monto adjudicado por año", span(class = "nota ms-2", "(pasá el mouse por una barra)")), uiOutput("p_serie")),
+      card(card_header("Mayores proveedores del período"), uiOutput("p_top"))),
+    card(card_header("Procedimientos"), uiOutput("p_tipos"))),
 
   nav_panel("Proveedores",
     card(fill = FALSE, card_header("Ranking de proveedores — hacé clic en una fila para abrir su ficha"), DTOutput("t_prov")),
@@ -103,13 +122,9 @@ ui <- page_navbar(
 server <- function(input, output, session) {
 
   observe({
-    ts <- sort(unique(pares$tipo))
+    ts <- TIPOS
     updateSelectInput(session, "tipo", choices = c("Todos" = "", setNames(ts, ts)))
   })
-  prov_ch <- prov_choices[, .(value = proveedor_id,
-                              label = paste0(proveedor, "  [", sub("^R/", "", proveedor_id), "]"))]
-  comp_ch <- comp_choices[, .(value = comprador_id,
-                              label = paste0(comprador, "  (", coalesce(inciso, "s/d"), ")"))]
   # Con server = TRUE las opciones hay que reenviarlas cada vez que cambia `selected`.
   sel_prov <- function(id = character(0)) updateSelectizeInput(session, "prov", choices = prov_ch, selected = id, server = TRUE)
   sel_comp <- function(id = character(0)) updateSelectizeInput(session, "comp", choices = comp_ch, selected = id, server = TRUE)
@@ -126,15 +141,6 @@ server <- function(input, output, session) {
 
   # Modo oscuro por defecto: hasta que el cliente informa, `input$modo` es NULL.
   oscuro <- reactive(!identical(input$modo, "light"))
-  col1 <- reactive(if (oscuro()) "#60a5fa" else "#1f4e79")
-  col2 <- reactive(if (oscuro()) "#93c5fd" else "#4f81b0")
-  tp <- function(p) {   # fondo transparente y ejes legibles en cualquier modo
-    fg <- if (oscuro()) "#e5e7eb" else "#1f2937"; gr <- if (oscuro()) "rgba(255,255,255,.12)" else "rgba(0,0,0,.1)"
-    p |> layout(paper_bgcolor = "rgba(0,0,0,0)", plot_bgcolor = "rgba(0,0,0,0)", font = list(color = fg),
-                xaxis = list(gridcolor = gr, zerolinecolor = gr), yaxis = list(gridcolor = gr, zerolinecolor = gr),
-                hoverlabel = list(font = list(color = "#ffffff"))) |>
-      config(displayModeBar = FALSE)
-  }
 
   # ---------------- Panorama ----------------
   output$k1 <- renderUI(kpi("Monto adjudicado", fmt_monto(sum(P()$monto), mon())))
@@ -145,26 +151,17 @@ server <- function(input, output, session) {
     kpi("Peso de los 10 mayores proveedores", fmt_pct(concentracion(pv$m)$top10),
         paste(fmt_n(uniqueN(P()$comprador_id)), "entes compradores"))
   })
-  output$p_serie <- renderPlotly({
+  output$p_serie <- renderUI({
     d <- P()[, .(monto = sum(monto)), by = anio][order(anio)]
-    plot_ly(d, x = ~anio, y = ~monto / 1e6, type = "bar", marker = list(color = col1()),
-            hovertemplate = paste0("%{x}: %{y:,.1f} M ", mon(), "<extra></extra>")) |>
-      layout(xaxis = list(title = "", dtick = 1), yaxis = list(title = paste("millones de", mon()))) |> tp()
+    barras_v(d$anio, d$monto)
   })
-  output$p_top <- renderPlotly({
+  output$p_top <- renderUI({
     d <- P()[, .(monto = sum(monto)), by = .(proveedor_id, proveedor)][order(-monto)][1:12]
-    d[, etq := substr(proveedor, 1, 26)]
-    plot_ly(d, y = ~reorder(etq, monto), x = ~monto / 1e6, type = "bar", orientation = "h",
-            marker = list(color = col1()), text = ~proveedor, textposition = "none",
-            hovertemplate = paste0("%{text}<br>%{x:,.1f} M ", mon(), "<extra></extra>")) |>
-      layout(xaxis = list(title = paste("millones de", mon())), yaxis = list(title = "", automargin = TRUE)) |> tp()
+    barras_h(d$proveedor, d$monto)
   })
-  output$p_tipos <- renderPlotly({
+  output$p_tipos <- renderUI({
     d <- P()[, .(monto = sum(monto)), by = tipo][order(-monto)][1:10]
-    plot_ly(d, y = ~reorder(substr(tipo, 1, 40), monto), x = ~monto / 1e6, type = "bar", orientation = "h",
-            marker = list(color = col2()),
-            hovertemplate = paste0("%{x:,.1f} M ", mon(), "<extra></extra>")) |>
-      layout(xaxis = list(title = paste("millones de", mon())), yaxis = list(title = "", automargin = TRUE)) |> tp()
+    barras_h(d$tipo, d$monto, col = "var(--acento2)")
   })
 
   # ---------------- Rankings ----------------
@@ -217,10 +214,10 @@ server <- function(input, output, session) {
         downloadButton(ns, "Descargar informe PDF", class = "btn-primary btn-sm"),
         actionButton(paste0("go_red_", tipo), "Ver su red de vínculos", icon = icon("diagram-project"), class = "btn-outline-primary btn-sm")),
       card(card_header(paste0(if (es_prov) "Entes" else "Proveedores", " vinculados")),
-           plotlyOutput(paste0("f_top_", tipo), height = 300)),
+           uiOutput(paste0("f_top_", tipo))),
       card(card_header(paste0("Todos los vínculos — clic en una fila para abrir ", if (es_prov) "el ente" else "al proveedor")),
            DTOutput(paste0("f_tab_", tipo))),
-      card(card_header("Evolución anual"), plotlyOutput(paste0("f_serie_", tipo), height = 220)),
+      card(card_header("Evolución anual"), uiOutput(paste0("f_serie_", tipo))),
       card(card_header("Mayores adjudicaciones"), DTOutput(paste0("f_det_", tipo))))
   }
   output$ficha_prov <- renderUI(if (nzchar(input$prov %||% "")) ficha("proveedor", input$prov))
@@ -232,24 +229,19 @@ server <- function(input, output, session) {
   for (tipo in c("proveedor", "ente")) local({
     tipo <- tipo
     contra <- if (tipo == "proveedor") "comprador" else "proveedor"
-    output[[paste0("f_top_", tipo)]] <- renderPlotly({
+    output[[paste0("f_top_", tipo)]] <- renderUI({
       d <- subset_ficha(tipo)[, .(monto = sum(monto)), by = c(contra)][order(-monto)][1:12]
-      d[, etq := substr(get(contra), 1, 40)]
-      plot_ly(d, y = ~reorder(etq, monto), x = ~monto / 1e6, type = "bar", orientation = "h",
-              marker = list(color = col1()), text = d[[contra]], textposition = "none",
-              hovertemplate = paste0("%{text}<br>%{x:,.2f} M ", mon(), "<extra></extra>")) |>
-        layout(xaxis = list(title = paste("millones de", mon())), yaxis = list(title = "", automargin = TRUE)) |> tp()
+      d <- d[!is.na(monto)]
+      barras_h(d[[contra]], d$monto)
     })
-    output[[paste0("f_serie_", tipo)]] <- renderPlotly({
+    output[[paste0("f_serie_", tipo)]] <- renderUI({
       d <- subset_ficha(tipo)[, .(monto = sum(monto)), by = anio][order(anio)]
-      plot_ly(d, x = ~anio, y = ~monto / 1e6, type = "bar", marker = list(color = col2()),
-              hovertemplate = paste0("%{x}: %{y:,.2f} M ", mon(), "<extra></extra>")) |>
-        layout(xaxis = list(title = "", dtick = 1), yaxis = list(title = "millones")) |> tp()
+      barras_v(d$anio, d$monto, col = "var(--acento2)")
     })
     output[[paste0("f_det_", tipo)]] <- renderDT({
       id <- if (tipo == "proveedor") input$prov else input$comp
       m <- mon(); a0 <- input$anios[1]; a1 <- input$anios[2]
-      d <- adj_ds |> filter(estado == "active", moneda == m, anio >= a0, anio <= a1)
+      d <- adj_ds() |> filter(estado == "active", moneda == m, anio >= a0, anio <= a1)
       d <- if (tipo == "proveedor") d |> filter(proveedor_id == id) else d |> filter(comprador_id == id)
       if (!isTRUE(input$atipicos)) d <- d |> filter(!atipico)
       if (nzchar(input$tipo)) { tp <- input$tipo; d <- d |> filter(tipo == tp) }
@@ -275,14 +267,14 @@ server <- function(input, output, session) {
 
   # ---------------- Calidad de datos ----------------
   output$t_atip <- renderDT({
-    d <- adj_ds |> filter(atipico) |> select(anio, comprador, proveedor, objeto, moneda, monto) |>
+    d <- adj_ds() |> filter(atipico) |> select(anio, comprador, proveedor, objeto, moneda, monto) |>
       collect() |> arrange(desc(monto))
     names(d) <- c("Año", "Ente", "Proveedor", "Objeto", "Moneda", "Monto")
     datatable(d, rownames = FALSE, class = "compact stripe", options = list(pageLength = 10, scrollX = TRUE, language = dt_es)) |>
       formatCurrency("Monto", currency = "", mark = ".", dec.mark = ",", digits = 0)
   })
   output$t_cob <- renderDT({
-    d <- adj_ds |> filter(estado == "active", anio >= 2002) |>
+    d <- adj_ds() |> filter(estado == "active", anio >= 2002) |>
       group_by(anio) |> summarise(n = n(), sin_prov = sum(is.na(proveedor_id)), sin_tipo = sum(is.na(tipo))) |>
       collect() |> arrange(anio)
     d <- data.frame(Año = d$anio, Adjudicaciones = d$n,
@@ -292,9 +284,6 @@ server <- function(input, output, session) {
   })
 
   # ---------------- Red de vínculos ----------------
-  foco_ch <- rbind(
-    prov_ch[, .(value = paste0("p:", value), label = paste0("[Proveedor] ", label))],
-    comp_ch[, .(value = paste0("e:", value), label = paste0("[Ente] ", label))])
   updateSelectizeInput(session, "red_foco", choices = foco_ch, selected = character(0), server = TRUE)
   ir_a_red <- function(nodo) {
     nav_select("nav", "Vínculos")

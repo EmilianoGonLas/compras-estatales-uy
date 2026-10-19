@@ -190,38 +190,6 @@
         "Built": "R 4.5.2; x86_64-pc-linux-gnu; \"Thu, 19 Mar 2026 10:32:45 -0400\"; unix"
       }
     },
-    "askpass": {
-      "Source": "CRAN",
-      "Repository": "https://cloud.r-project.org",
-      "description": {
-        "Package": "askpass",
-        "Type": "Package",
-        "Title": "Password Entry Utilities for R, Git, and SSH",
-        "Version": "1.2.1",
-        "Authors@R": "person(\"Jeroen\", \"Ooms\", role = c(\"aut\", \"cre\"), \n    email = \"jeroenooms@gmail.com\", comment = c(ORCID = \"0000-0002-4035-0289\"))",
-        "Description": "Cross-platform utilities for prompting the user for credentials or a \n    passphrase, for example to authenticate with a server or read a protected key.\n    Includes native programs for MacOS and Windows, hence no 'tcltk' is required. \n    Password entry can be invoked in two different ways: directly from R via the \n    askpass() function, or indirectly as password-entry back-end for 'ssh-agent' \n    or 'git-credential' via the SSH_ASKPASS and GIT_ASKPASS environment variables.\n    Thereby the user can be prompted for credentials or a passphrase if needed \n    when R calls out to git or ssh.",
-        "License": "MIT + file LICENSE",
-        "URL": "https://r-lib.r-universe.dev/askpass",
-        "BugReports": "https://github.com/r-lib/askpass/issues",
-        "Encoding": "UTF-8",
-        "Imports": "sys (>= 2.1)",
-        "RoxygenNote": "7.2.3",
-        "Suggests": "testthat",
-        "Language": "en-US",
-        "NeedsCompilation": "yes",
-        "Packaged": "2024-10-03 14:12:09 UTC; jeroen",
-        "Author": "Jeroen Ooms [aut, cre] (<https://orcid.org/0000-0002-4035-0289>)",
-        "Maintainer": "Jeroen Ooms <jeroenooms@gmail.com>",
-        "Repository": "CRAN",
-        "Date/Publication": "2024-10-04 07:20:03 UTC",
-        "Built": "R 4.5.2; x86_64-pc-linux-gnu; 2026-05-13 05:06:49 UTC; unix",
-        "RemoteType": "standard",
-        "RemotePkgRef": "askpass",
-        "RemoteRef": "askpass",
-        "RemoteRepos": "https://cloud.r-project.org",
-        "RemoteSha": "1.2.1"
-      }
-    },
     "assertthat": {
       "Source": "CRAN",
       "Repository": "https://cloud.r-project.org",
@@ -524,35 +492,6 @@
         "RemoteRef": "crosstalk",
         "RemoteRepos": "https://cloud.r-project.org",
         "RemoteSha": "1.2.2"
-      }
-    },
-    "curl": {
-      "Source": "CRAN",
-      "Repository": "https://cloud.r-project.org",
-      "description": {
-        "Package": "curl",
-        "Type": "Package",
-        "Title": "A Modern and Flexible Web Client for R",
-        "Version": "8.0.0",
-        "Authors@R": "c(\n    person(\"Jeroen\", \"Ooms\", role = c(\"aut\", \"cre\"), email = \"jeroenooms@gmail.com\",\n      comment = c(ORCID = \"0000-0002-4035-0289\")),\n    person(\"Hadley\", \"Wickham\", role = \"ctb\"),\n    person(\"Posit Software, PBC\", role = \"cph\"))",
-        "Description": "Bindings to 'libcurl' <https://curl.se/libcurl/> for performing fully\n    configurable HTTP/FTP requests where responses can be processed in memory, on\n    disk, or streaming via the callback or connection interfaces. Some knowledge\n    of 'libcurl' is recommended; for a more-user-friendly web client see the \n    'httr2' package which builds on this package with http specific tools and logic.",
-        "License": "MIT + file LICENSE",
-        "SystemRequirements": "libcurl (>= 7.73): libcurl-devel (rpm) or\nlibcurl4-openssl-dev (deb)",
-        "URL": "https://jeroen.r-universe.dev/curl",
-        "BugReports": "https://github.com/jeroen/curl/issues",
-        "Suggests": "spelling, testthat (>= 1.0.0), knitr, jsonlite, later,\nrmarkdown, httpuv (>= 1.4.4), webutils",
-        "VignetteBuilder": "knitr",
-        "Depends": "R (>= 3.0.0)",
-        "Encoding": "UTF-8",
-        "Language": "en-US",
-        "Config/roxygen2/version": "8.0.0",
-        "NeedsCompilation": "yes",
-        "Packaged": "2026-08-25 12:49:41 UTC; jeroen",
-        "Author": "Jeroen Ooms [aut, cre] (ORCID: <https://orcid.org/0000-0002-4035-0289>),\n  Hadley Wickham [ctb],\n  Posit Software, PBC [cph]",
-        "Maintainer": "Jeroen Ooms <jeroenooms@gmail.com>",
-        "Repository": "CRAN",
-        "Date/Publication": "2026-08-25 16:40:02 UTC",
-        "Built": "R 4.5.2; x86_64-pc-linux-gnu; 2026-09-05 06:54:20 UTC; unix"
       }
     },
     "data.table": {
@@ -1122,34 +1061,6 @@
         "RemoteSha": "1.6.17"
       }
     },
-    "httr": {
-      "Source": "CRAN",
-      "Repository": "https://cloud.r-project.org",
-      "description": {
-        "Package": "httr",
-        "Title": "Tools for Working with URLs and HTTP",
-        "Version": "1.4.9",
-        "Authors@R": "c(\n    person(\"Hadley\", \"Wickham\", , \"hadley@posit.co\", role = c(\"aut\", \"cre\")),\n    person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"))\n  )",
-        "Description": "Useful tools for working with HTTP organised by HTTP verbs\n    (GET(), POST(), etc). Configuration functions make it easy to control\n    additional request components (authenticate(), add_headers() and so\n    on).",
-        "License": "MIT + file LICENSE",
-        "URL": "https://httr.r-lib.org/, https://github.com/r-lib/httr",
-        "BugReports": "https://github.com/r-lib/httr/issues",
-        "Depends": "R (>= 3.6)",
-        "Imports": "curl (>= 5.1.0), jsonlite, mime, openssl (>= 0.8), R6",
-        "Suggests": "covr, httpuv, jpeg, knitr, png, readr, rmarkdown, testthat\n(>= 0.8.0), xml2",
-        "VignetteBuilder": "knitr",
-        "Config/Needs/website": "tidyverse/tidytemplate",
-        "Config/roxygen2/version": "8.1.0",
-        "Encoding": "UTF-8",
-        "NeedsCompilation": "no",
-        "Packaged": "2026-08-31 22:59:51 UTC; hadleywickham",
-        "Author": "Hadley Wickham [aut, cre],\n  Posit Software, PBC [cph, fnd]",
-        "Maintainer": "Hadley Wickham <hadley@posit.co>",
-        "Repository": "CRAN",
-        "Date/Publication": "2026-09-01 13:20:02 UTC",
-        "Built": "R 4.5.2; ; 2026-09-05 06:56:33 UTC; unix"
-      }
-    },
     "isoband": {
       "Source": "CRAN",
       "Repository": "https://cloud.r-project.org",
@@ -1499,34 +1410,6 @@
         "RemoteSha": "0.13"
       }
     },
-    "openssl": {
-      "Source": "CRAN",
-      "Repository": "https://cloud.r-project.org",
-      "description": {
-        "Package": "openssl",
-        "Type": "Package",
-        "Title": "Toolkit for Encryption, Signatures and Certificates Based on\nOpenSSL",
-        "Version": "2.4.2",
-        "Authors@R": "c(person(\"Jeroen\", \"Ooms\", role = c(\"aut\", \"cre\"), email = \"jeroenooms@gmail.com\",\n    comment = c(ORCID = \"0000-0002-4035-0289\")),\n    person(\"Oliver\", \"Keyes\", role = \"ctb\"))",
-        "Description": "Bindings to OpenSSL libssl and libcrypto, plus custom SSH key parsers.\n    Supports RSA, DSA and EC curves P-256, P-384, P-521, and curve25519. Cryptographic\n    signatures can either be created and verified manually or via x509 certificates. \n    AES can be used in cbc, ctr or gcm mode for symmetric encryption; RSA for asymmetric\n    (public key) encryption or EC for Diffie Hellman. High-level envelope functions \n    combine RSA and AES for encrypting arbitrary sized data. Other utilities include key\n    generators, hash functions (md5, sha1, sha256, etc), base64 encoder, a secure random\n    number generator, and 'bignum' math methods for manually performing crypto \n    calculations on large multibyte integers.",
-        "License": "MIT + file LICENSE",
-        "URL": "https://jeroen.r-universe.dev/openssl",
-        "BugReports": "https://github.com/jeroen/openssl/issues",
-        "SystemRequirements": "OpenSSL >= 1.0.2",
-        "VignetteBuilder": "knitr",
-        "Imports": "askpass",
-        "Suggests": "curl, testthat (>= 2.1.0), digest, knitr, rmarkdown,\njsonlite, jose, sodium",
-        "Encoding": "UTF-8",
-        "Config/roxygen2/version": "8.0.0",
-        "NeedsCompilation": "yes",
-        "Packaged": "2026-06-09 10:51:42 UTC; jeroen",
-        "Author": "Jeroen Ooms [aut, cre] (ORCID: <https://orcid.org/0000-0002-4035-0289>),\n  Oliver Keyes [ctb]",
-        "Maintainer": "Jeroen Ooms <jeroenooms@gmail.com>",
-        "Repository": "CRAN",
-        "Date/Publication": "2026-06-09 13:30:02 UTC",
-        "Built": "R 4.5.2; x86_64-pc-linux-gnu; 2026-09-05 06:54:08 UTC; unix"
-      }
-    },
     "otel": {
       "Source": "CRAN",
       "Repository": "https://cloud.r-project.org",
@@ -1625,34 +1508,6 @@
         "RemoteRef": "pkgconfig",
         "RemoteRepos": "https://cloud.r-project.org",
         "RemoteSha": "2.0.3"
-      }
-    },
-    "plotly": {
-      "Source": "CRAN",
-      "Repository": "https://cloud.r-project.org",
-      "description": {
-        "Package": "plotly",
-        "Title": "Create Interactive Web Graphics via 'plotly.js'",
-        "Version": "4.12.1",
-        "Authors@R": "c(person(\"Carson\", \"Sievert\", role = c(\"aut\", \"cre\"),\n    email = \"cpsievert1@gmail.com\", comment = c(ORCID = \"0000-0002-4958-2844\")),\n    person(\"Chris\", \"Parmer\", role = \"aut\",\n    email = \"chris@plot.ly\"),\n    person(\"Toby\", \"Hocking\", role = \"aut\",\n    email = \"tdhock5@gmail.com\"),\n    person(\"Scott\", \"Chamberlain\", role = \"aut\",\n    email = \"myrmecocystus@gmail.com\"),\n    person(\"Karthik\", \"Ram\", role = \"aut\",\n    email = \"karthik.ram@gmail.com\"),\n    person(\"Marianne\", \"Corvellec\", role = \"aut\",\n    email = \"marianne.corvellec@igdore.org\", comment = c(ORCID = \"0000-0002-1994-3581\")),\n    person(\"Pedro\", \"Despouy\", role = \"aut\",\n    email = \"pedro@plot.ly\"),\n    person(\"Salim\", \"Brüggemann\", role = \"ctb\",\n    email = \"salim-b@pm.me\", comment = c(ORCID = \"0000-0002-5329-5987\")),\n    person(\"Plotly Technologies Inc.\", role = \"cph\"))",
-        "License": "MIT + file LICENSE",
-        "Description": "Create interactive web graphics from 'ggplot2' graphs and/or a custom interface to the (MIT-licensed) JavaScript library 'plotly.js' inspired by the grammar of graphics.",
-        "URL": "https://plotly-r.com, https://github.com/plotly/plotly.R,\nhttps://plotly.com/r/",
-        "BugReports": "https://github.com/plotly/plotly.R/issues",
-        "Depends": "R (>= 3.5.0), ggplot2 (>= 3.0.0)",
-        "Imports": "tools, scales, httr (>= 1.3.0), jsonlite (>= 1.6), magrittr,\ndigest, viridisLite, base64enc, htmltools (>= 0.3.6),\nhtmlwidgets (>= 1.5.2.9001), tidyr (>= 1.0.0), RColorBrewer,\ndplyr, vctrs, tibble, rlang (>= 1.0.0), crosstalk, purrr,\ndata.table, promises",
-        "Suggests": "MASS, maps, hexbin, ggthemes, GGally, ggalluvial, testthat,\nknitr, shiny (>= 1.1.0), shinytest2, curl, rmarkdown, Cairo,\nbroom, webshot, listviewer, dendextend, sf, png, IRdisplay,\nprocessx, plotlyGeoAssets, forcats, withr, palmerpenguins,\nrversions, reticulate, rsvg, ggridges",
-        "LazyData": "true",
-        "RoxygenNote": "7.3.3",
-        "Encoding": "UTF-8",
-        "Config/Needs/check": "tidyverse/ggplot2, ggobi/GGally, rcmdcheck,\ndevtools, reshape2, s2",
-        "NeedsCompilation": "no",
-        "Packaged": "2026-07-21 23:17:16 UTC; cpsievert",
-        "Author": "Carson Sievert [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-4958-2844>),\n  Chris Parmer [aut],\n  Toby Hocking [aut],\n  Scott Chamberlain [aut],\n  Karthik Ram [aut],\n  Marianne Corvellec [aut] (ORCID:\n    <https://orcid.org/0000-0002-1994-3581>),\n  Pedro Despouy [aut],\n  Salim Brüggemann [ctb] (ORCID: <https://orcid.org/0000-0002-5329-5987>),\n  Plotly Technologies Inc. [cph]",
-        "Maintainer": "Carson Sievert <cpsievert1@gmail.com>",
-        "Repository": "CRAN",
-        "Date/Publication": "2026-07-22 06:10:02 UTC",
-        "Built": "R 4.5.2; ; 2026-09-05 07:02:10 UTC; unix"
       }
     },
     "promises": {
@@ -1957,103 +1812,6 @@
         "RemoteSha": "0.1.7-2"
       }
     },
-    "stringi": {
-      "Source": "CRAN",
-      "Repository": "https://cloud.r-project.org",
-      "description": {
-        "Package": "stringi",
-        "Version": "1.8.9",
-        "Date": "2026-07-30",
-        "Title": "Fast and Portable Character String Processing Facilities",
-        "Description": "A collection of character string/text/natural language\n    processing tools for pattern searching (e.g., with 'Java'-like regular\n    expressions or the 'Unicode' collation algorithm), random string generation,\n    case mapping, string transliteration, concatenation, sorting, padding,\n    wrapping, Unicode normalisation, date-time formatting and parsing,\n    and many more. They are fast, consistent, convenient, and -\n    thanks to 'ICU' (International Components for Unicode) -\n    portable across all locales and platforms. Documentation about 'stringi' is\n    provided via its website at <https://stringi.gagolewski.com/> and\n    the paper by Gagolewski (2022, <doi:10.18637/jss.v103.i02>).",
-        "URL": "https://stringi.gagolewski.com/,\nhttps://github.com/gagolews/stringi, https://icu.unicode.org/",
-        "BugReports": "https://github.com/gagolews/stringi/issues",
-        "SystemRequirements": "ICU4C (>= 61, optional)",
-        "Type": "Package",
-        "Depends": "R (>= 3.4)",
-        "Imports": "tools, utils, stats",
-        "Biarch": "TRUE",
-        "License": "file LICENSE",
-        "Authors@R": "c(person(given = \"Marek\",\n                      family = \"Gagolewski\",\n                      role = c(\"aut\", \"cre\", \"cph\"),\n                      email = \"marek@gagolewski.com\",\n                      comment = c(ORCID = \"0000-0003-0637-6028\")),\n               person(given = \"Bartek\",\n                      family = \"Tartanus\",\n                      role = \"ctb\"),\n               person(\"Unicode, Inc. and others\", role=\"ctb\",\n                      comment = \"ICU4C source code, Unicode Character Database\")\n    )",
-        "Encoding": "UTF-8",
-        "Config/roxygen2/version": "8.0.0",
-        "NeedsCompilation": "yes",
-        "Packaged": "2026-07-30 08:44:50 UTC; gagolews",
-        "Author": "Marek Gagolewski [aut, cre, cph] (ORCID:\n    <https://orcid.org/0000-0003-0637-6028>),\n  Bartek Tartanus [ctb],\n  Unicode, Inc. and others [ctb] (ICU4C source code, Unicode Character\n    Database)",
-        "Maintainer": "Marek Gagolewski <marek@gagolewski.com>",
-        "License_is_FOSS": "yes",
-        "Repository": "CRAN",
-        "Date/Publication": "2026-08-04 16:30:03 UTC",
-        "Built": "R 4.5.2; x86_64-pc-linux-gnu; 2026-09-05 06:52:14 UTC; unix"
-      }
-    },
-    "stringr": {
-      "Source": "CRAN",
-      "Repository": "https://cloud.r-project.org",
-      "description": {
-        "Package": "stringr",
-        "Title": "Simple, Consistent Wrappers for Common String Operations",
-        "Version": "1.6.0",
-        "Authors@R": "c(\n    person(\"Hadley\", \"Wickham\", , \"hadley@posit.co\", role = c(\"aut\", \"cre\", \"cph\")),\n    person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"))\n  )",
-        "Description": "A consistent, simple and easy to use set of wrappers around\n    the fantastic 'stringi' package. All function and argument names (and\n    positions) are consistent, all functions deal with \"NA\"'s and zero\n    length vectors in the same way, and the output from one function is\n    easy to feed into the input of another.",
-        "License": "MIT + file LICENSE",
-        "URL": "https://stringr.tidyverse.org,\nhttps://github.com/tidyverse/stringr",
-        "BugReports": "https://github.com/tidyverse/stringr/issues",
-        "Depends": "R (>= 4.1.0)",
-        "Imports": "cli, glue (>= 1.6.1), lifecycle (>= 1.0.3), magrittr, rlang\n(>= 1.0.0), stringi (>= 1.5.3), vctrs (>= 0.4.0)",
-        "Suggests": "covr, dplyr, gt, htmltools, htmlwidgets, knitr, rmarkdown,\ntestthat (>= 3.0.0), tibble",
-        "VignetteBuilder": "knitr",
-        "Config/Needs/website": "tidyverse/tidytemplate",
-        "Config/potools/style": "explicit",
-        "Config/testthat/edition": "3",
-        "Encoding": "UTF-8",
-        "LazyData": "true",
-        "RoxygenNote": "7.3.3",
-        "NeedsCompilation": "no",
-        "Packaged": "2025-11-03 22:09:58 UTC; hadleywickham",
-        "Author": "Hadley Wickham [aut, cre, cph],\n  Posit Software, PBC [cph, fnd]",
-        "Maintainer": "Hadley Wickham <hadley@posit.co>",
-        "Repository": "CRAN",
-        "Date/Publication": "2025-11-04 14:00:02 UTC",
-        "Built": "R 4.5.2; ; 2026-05-13 05:13:59 UTC; unix",
-        "RemoteType": "standard",
-        "RemotePkgRef": "stringr",
-        "RemoteRef": "stringr",
-        "RemoteRepos": "https://cloud.r-project.org",
-        "RemoteSha": "1.6.0"
-      }
-    },
-    "sys": {
-      "Source": "CRAN",
-      "Repository": "https://cloud.r-project.org",
-      "description": {
-        "Package": "sys",
-        "Type": "Package",
-        "Title": "Powerful and Reliable Tools for Running System Commands in R",
-        "Version": "3.4.3",
-        "Authors@R": "c(person(\"Jeroen\", \"Ooms\", role = c(\"aut\", \"cre\"), \n      email = \"jeroenooms@gmail.com\", comment = c(ORCID = \"0000-0002-4035-0289\")),\n    person(\"Gábor\", \"Csárdi\", , \"csardi.gabor@gmail.com\", role = \"ctb\"))",
-        "Description": "Drop-in replacements for the base system2() function with fine control\n    and consistent behavior across platforms. Supports clean interruption, timeout, \n    background tasks, and streaming STDIN / STDOUT / STDERR over binary or text \n    connections. Arguments on Windows automatically get encoded and quoted to work \n    on different locales.",
-        "License": "MIT + file LICENSE",
-        "URL": "https://jeroen.r-universe.dev/sys",
-        "BugReports": "https://github.com/jeroen/sys/issues",
-        "Encoding": "UTF-8",
-        "RoxygenNote": "7.1.1",
-        "Suggests": "unix (>= 1.4), spelling, testthat",
-        "Language": "en-US",
-        "NeedsCompilation": "yes",
-        "Packaged": "2024-10-03 14:13:17 UTC; jeroen",
-        "Author": "Jeroen Ooms [aut, cre] (<https://orcid.org/0000-0002-4035-0289>),\n  Gábor Csárdi [ctb]",
-        "Maintainer": "Jeroen Ooms <jeroenooms@gmail.com>",
-        "Repository": "CRAN",
-        "Date/Publication": "2024-10-04 09:40:02 UTC",
-        "Built": "R 4.5.2; x86_64-pc-linux-gnu; 2026-05-13 05:06:47 UTC; unix",
-        "RemoteType": "standard",
-        "RemotePkgRef": "sys",
-        "RemoteRef": "sys",
-        "RemoteRepos": "https://cloud.r-project.org",
-        "RemoteSha": "3.4.3"
-      }
-    },
     "tibble": {
       "Source": "CRAN",
       "Repository": "https://cloud.r-project.org",
@@ -2092,43 +1850,6 @@
         "RemoteRef": "tibble",
         "RemoteRepos": "https://cloud.r-project.org",
         "RemoteSha": "3.3.1"
-      }
-    },
-    "tidyr": {
-      "Source": "CRAN",
-      "Repository": "https://cloud.r-project.org",
-      "description": {
-        "Package": "tidyr",
-        "Title": "Tidy Messy Data",
-        "Version": "1.3.2",
-        "Authors@R": "c(\n    person(\"Hadley\", \"Wickham\", , \"hadley@posit.co\", role = c(\"aut\", \"cre\")),\n    person(\"Davis\", \"Vaughan\", , \"davis@posit.co\", role = \"aut\"),\n    person(\"Maximilian\", \"Girlich\", role = \"aut\"),\n    person(\"Kevin\", \"Ushey\", , \"kevin@posit.co\", role = \"ctb\"),\n    person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"))\n  )",
-        "Description": "Tools to help to create tidy data, where each column is a\n    variable, each row is an observation, and each cell contains a single\n    value. 'tidyr' contains tools for changing the shape (pivoting) and\n    hierarchy (nesting and 'unnesting') of a dataset, turning deeply\n    nested lists into rectangular data frames ('rectangling'), and\n    extracting values out of string columns. It also includes tools for\n    working with missing values (both implicit and explicit).",
-        "License": "MIT + file LICENSE",
-        "URL": "https://tidyr.tidyverse.org, https://github.com/tidyverse/tidyr",
-        "BugReports": "https://github.com/tidyverse/tidyr/issues",
-        "Depends": "R (>= 4.1.0)",
-        "Imports": "cli (>= 3.4.1), dplyr (>= 1.1.0), glue, lifecycle (>= 1.0.3),\nmagrittr, purrr (>= 1.0.1), rlang (>= 1.1.1), stringr (>=\n1.5.0), tibble (>= 2.1.1), tidyselect (>= 1.2.1), utils, vctrs\n(>= 0.5.2)",
-        "Suggests": "covr, data.table, knitr, readr, repurrrsive (>= 1.1.0),\nrmarkdown, testthat (>= 3.0.0)",
-        "LinkingTo": "cpp11 (>= 0.4.0)",
-        "VignetteBuilder": "knitr",
-        "Config/build/compilation-database": "true",
-        "Config/Needs/website": "tidyverse/tidytemplate",
-        "Config/testthat/edition": "3",
-        "Encoding": "UTF-8",
-        "LazyData": "true",
-        "RoxygenNote": "7.3.3",
-        "NeedsCompilation": "yes",
-        "Packaged": "2025-12-17 23:35:11 UTC; hadleywickham",
-        "Author": "Hadley Wickham [aut, cre],\n  Davis Vaughan [aut],\n  Maximilian Girlich [aut],\n  Kevin Ushey [ctb],\n  Posit Software, PBC [cph, fnd]",
-        "Maintainer": "Hadley Wickham <hadley@posit.co>",
-        "Repository": "CRAN",
-        "Date/Publication": "2025-12-19 09:20:02 UTC",
-        "Built": "R 4.5.2; x86_64-pc-linux-gnu; 2026-05-13 05:16:30 UTC; unix",
-        "RemoteType": "standard",
-        "RemotePkgRef": "tidyr",
-        "RemoteRef": "tidyr",
-        "RemoteRepos": "https://cloud.r-project.org",
-        "RemoteSha": "1.3.2"
       }
     },
     "tidyselect": {
@@ -2445,31 +2166,76 @@
   },
   "files": {
     "app.R": {
-      "checksum": "31e23762023fd93153dd53ff2e576933"
+      "checksum": "3b7cbaefab95cb36409cd0a9a88f8750"
     },
     "data/app/adjudicaciones.parquet": {
       "checksum": "27493a95da60d5c209df40fec121cb43"
     },
-    "data/app/pares.parquet": {
-      "checksum": "a507cd543591df766be51fae69a5e87b"
+    "data/app/meta.rds": {
+      "checksum": "407169ea3dd0ba87b4d90c8b307ef968"
+    },
+    "data/app/pares.rds": {
+      "checksum": "95f011869d5c7ba243c97d3cf382c66c"
     },
     "docs/acerca.html": {
       "checksum": "198e3d2b7ca6b259754e2359319174d2"
     },
     "global.R": {
-      "checksum": "7cbeb0d3bc63ed78b9318849cae95a88"
+      "checksum": "93ea0b7a03cb1093e1044ea26afb1590"
     },
     "R/formato.R": {
       "checksum": "c1f7f4358a33cd4c6a8ad111a5f58d6e"
     },
+    "R/graficos.R": {
+      "checksum": "4f9bafca63e63fcc607a3e49110ff961"
+    },
     "R/informe.R": {
-      "checksum": "5e4490516a0b6256e56406c4306177f8"
+      "checksum": "b2157867899704fcd2629408204cd2c8"
+    },
+    "sass-cache/2bf089cdadec87bba38850a2eeda7a4a": {
+      "checksum": "128cb962683e2c6a8efd511dcce17cc5"
+    },
+    "sass-cache/ae5055c0ceab0c1f943947f908a028d6": {
+      "checksum": "3135f279f1d96461bc69be0e5c99e216"
+    },
+    "sass-cache/b07bebb264da551463761b408ae0b1b9": {
+      "checksum": "905e1fbbf7bb4ed7f17fdf6f33ff629e"
+    },
+    "sass-cache/df1d6b245517bdd3ae11f98ed94a1bf0": {
+      "checksum": "9eeac2d84d6cc8890912c41941f0f10f"
+    },
+    "sass-cache/f78badadae56d81956e16815f278c46f": {
+      "checksum": "339ef11e00d629ed91ebc29af79207af"
+    },
+    "www/fonts/font.css": {
+      "checksum": "4d4b67395ca6aea3b9b171554832a9a1"
+    },
+    "www/fonts/nwpBtKy2OAdR1K-IwhWudF-R9QMylBJAV3Bo8Ky462EE9CsKng.woff2": {
+      "checksum": "397d4f3b04fb4bf230b8131fb7036eaf"
+    },
+    "www/fonts/nwpBtKy2OAdR1K-IwhWudF-R9QMylBJAV3Bo8Ky462EF9CsKng.woff2": {
+      "checksum": "578fc152359297bf181c9423394e7943"
+    },
+    "www/fonts/nwpBtKy2OAdR1K-IwhWudF-R9QMylBJAV3Bo8Ky462EG9CsKng.woff2": {
+      "checksum": "d6f441ff9e8bcfcbb04239b8cd528526"
+    },
+    "www/fonts/nwpBtKy2OAdR1K-IwhWudF-R9QMylBJAV3Bo8Ky462EH9CsKng.woff2": {
+      "checksum": "e6e9cb9ca292600bb45d4bfb7fd4c76e"
+    },
+    "www/fonts/nwpBtKy2OAdR1K-IwhWudF-R9QMylBJAV3Bo8Ky462EJ9CsKng.woff2": {
+      "checksum": "5837af767839444af514f7a93ae3a30a"
+    },
+    "www/fonts/nwpBtKy2OAdR1K-IwhWudF-R9QMylBJAV3Bo8Ky462EK9Cs.woff2": {
+      "checksum": "27ab01c4cb5013775d870ae8accb1040"
+    },
+    "www/fonts/nwpBtKy2OAdR1K-IwhWudF-R9QMylBJAV3Bo8Ky462EO9CsKng.woff2": {
+      "checksum": "bbdffcad8abac054a948e02755e673ca"
     },
     "www/red3d-data.js": {
       "checksum": "08ec4ce5067224712173f94ed60d72eb"
     },
     "www/red3d.html": {
-      "checksum": "f8dbc9a5f40bb6eb700f234f61d66c36"
+      "checksum": "1b0ed8afadab3dd62aaf6b205136dbd7"
     }
   },
   "users": null

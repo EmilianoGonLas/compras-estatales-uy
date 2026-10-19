@@ -5,9 +5,8 @@
 # Uso: Rscript scripts/deploy.R  (SIEMPRE desde la raíz del repo)
 rsconnect::deployApp(
   appDir   = ".",
-  appFiles = c("app.R", "global.R", "R/formato.R", "R/informe.R", "docs/acerca.html",
-               "www/red3d.html", "www/red3d-data.js",
-               "data/app/pares.parquet", "data/app/adjudicaciones.parquet"),
+  appFiles = c("app.R", "global.R", "R", "docs/acerca.html", "www", "sass-cache",
+               "data/app/pares.rds", "data/app/meta.rds", "data/app/adjudicaciones.parquet"),
   appName        = "ComprasEstatales",
   account        = "emilianogonzalez",
   forceUpdate    = TRUE,

@@ -93,11 +93,25 @@ detalle de `adjudicaciones.parquet` (60 MB) a demanda con arrow.
 `R/informe.R` los arma con ggplot2 + gridExtra sobre `cairo_pdf`: sin LaTeX ni Chrome,
 así corren igual en esta PC y en shinyapps.io.
 
+## Arranque rápido (importante en la nube)
+
+Connect Cloud apaga la app tras unos minutos sin uso; cada visita "en frío" tiene que levantarla antes de que el
+proxy se rinda (error *«upstream connect error … connection timeout»*). Por eso el arranque está recortado al mínimo:
+
+- los vínculos se leen de `data/app/pares.rds` (factores, 0,25 s) en vez de parquet vía `arrow`; lo precalculado
+  (opciones de los buscadores, años, monedas, última fecha) viene de `data/app/meta.rds` (ambos los genera `scripts/04_pares.R`);
+- `arrow` y `ggplot2` se cargan **recién** cuando se abre una ficha o se descarga un PDF;
+- los gráficos son HTML/CSS (`R/graficos.R`), sin plotly (−1,2 s y ~100 MB de RAM);
+- la tipografía está empaquetada en `www/fonts/` (antes el servidor la bajaba de Google en cada arranque).
+
+Medido en local, con cachés vacías: **8,7 s → 4,5 s** hasta la primera respuesta y **431 → 246 MB** de RAM.
+`Rscript scripts/probar_app.R` ejercita todas las salidas (claro y oscuro) sin navegador.
+
 ## Publicar
 
 - **Posit Connect Cloud** (plan gratis: 5 apps, 4 GB) — donde está publicada. Desde R, con
   `rsconnect` ≥ 1.11 y credenciales de API de Connect Cloud registradas
-  (`rsconnect::connectCloudClientCredentials()`): `Rscript scripts/deploy_cloud.R`. También se
+  (`rsconnect::connectCloudClientCredentials()`): `Rscript scripts/precalentar_css.R && Rscript scripts/deploy_cloud.R`. También se
   puede conectar el repo en connect.posit.cloud → *Publish* → Shiny → `main` / `app.R`
   (el `manifest.json` ya está; se regenera con `rsconnect::writeManifest()`).
 - **shinyapps.io**: `Rscript scripts/deploy.R`.
